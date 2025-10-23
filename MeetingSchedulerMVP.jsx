@@ -12,6 +12,7 @@ export default function MeetingSchedulerMVP() {
   const START_HOUR = 9;
   const END_HOUR = 19; // exclusive
 
+
   const palette = [
     "#60a5fa", // 원준
     "#f472b6", // 유진
@@ -209,25 +210,16 @@ export default function MeetingSchedulerMVP() {
   ];
 
   // ====== 상태 ======
-  const [participants, setParticipants] = useState(initialParticipants);
   const [demoMode, setDemoMode] = useState("small"); // small | large - 데모 모드
   
   // 데모 모드에 따른 참여자 데이터 선택
   const currentParticipants = demoMode === "large" ? largeParticipants : initialParticipants;
+  const [participants, setParticipants] = useState(currentParticipants);
   const [mode, setMode] = useState("organizer"); // organizer | participant
   const [activeParticipantId, setActiveParticipantId] = useState("p1");
   const [considerOnlyMandatory, setConsiderOnlyMandatory] = useState(false);
   const [ignoredEventIds, setIgnoredEventIds] = useState(new Set());
   const [selectedRequiredParticipantIds, setSelectedRequiredParticipantIds] = useState(new Set(["p1", "p2", "p3"]));
-  
-  // 데모 모드에 따른 필수 참여자 초기화
-  React.useEffect(() => {
-    if (demoMode === "large") {
-      setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"]));
-    } else {
-      setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3"]));
-    }
-  }, [demoMode]);
   const [selectedEvent, setSelectedEvent] = useState(null); // {participantId,eventId,day,start}
   const [overlapPicker, setOverlapPicker] = useState(null); // {day, topPct, items:[{participantId,eventId,title,participantName}]}
   const [isAddingEvent, setIsAddingEvent] = useState(false); // 일정 추가 모드
@@ -242,12 +234,87 @@ export default function MeetingSchedulerMVP() {
     return arr;
   }, []);
 
-  // 모바일 감지
-  const isMobile = useMemo(() => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-           ('ontouchstart' in window) || 
-           (navigator.maxTouchPoints > 0);
-  }, []);
+  // 터치 지원 감지 (이벤트 핸들러에서만 사용)
+  const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // 데모 모드에 따른 참여자 데이터 및 필수 참여자 초기화
+  React.useEffect(() => {
+    const newParticipants = demoMode === "large" ? largeParticipants : initialParticipants;
+    setParticipants(newParticipants);
+    
+    // activeParticipantId가 새로운 참여자 목록에 없으면 첫 번째 참여자로 설정
+    const validParticipantId = newParticipants.find(p => p.id === activeParticipantId) ? activeParticipantId : newParticipants[0]?.id;
+    if (validParticipantId !== activeParticipantId) {
+      setActiveParticipantId(validParticipantId);
+    }
+    
+    if (demoMode === "large") {
+      setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"]));
+    } else {
+      setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3"]));
+    }
+  }, [demoMode]);
+
+  // 일정 추가 모드에서 스크롤 방지
+  React.useEffect(() => {
+    if (mode === "participant" && isAddingEvent && !hasTouchSupport) {
+      const preventScroll = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+
+      const preventWheel = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+
+      const preventTouch = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+
+      // body와 documentElement 스크롤 방지
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.width = '100%';
+      document.documentElement.style.height = '100%';
+
+      // 전역 이벤트 리스너 추가 (더 강력한 스크롤 방지)
+      document.addEventListener('wheel', preventWheel, { passive: false, capture: true });
+      document.addEventListener('touchmove', preventTouch, { passive: false, capture: true });
+      document.addEventListener('scroll', preventScroll, { passive: false, capture: true });
+      document.addEventListener('keydown', (e) => {
+        // 스크롤 관련 키 방지
+        if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, { passive: false });
+
+      return () => {
+        // 정리 함수
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.position = '';
+        document.documentElement.style.width = '';
+        document.documentElement.style.height = '';
+        
+        document.removeEventListener('wheel', preventWheel, { capture: true });
+        document.removeEventListener('touchmove', preventTouch, { capture: true });
+        document.removeEventListener('scroll', preventScroll, { capture: true });
+      };
+    }
+  }, [mode, isAddingEvent, hasTouchSupport]);
 
   function timeToPct(t) {
     return ((t - START_HOUR) / (END_HOUR - START_HOUR)) * 100;
@@ -265,22 +332,38 @@ export default function MeetingSchedulerMVP() {
 
   // ====== 조작 ======
   function toggleMandatory(participantId, eventId) {
-    setParticipants((prev) =>
-      prev.map((p) =>
+    console.log('toggleMandatory 호출됨:', participantId, eventId);
+    
+    // participants 상태를 직접 업데이트
+    setParticipants((prev) => {
+      const updated = prev.map((p) =>
         p.id !== participantId
           ? p
           : {
               ...p,
               events: p.events.map((e) => (e.id === eventId ? { ...e, mandatory: !e.mandatory } : e)),
             }
-      )
-    );
+      );
+      console.log('업데이트된 participants:', updated);
+      return updated;
+    });
+    
+    // 필수 토글 후에는 오버레이를 닫지 않고 유지
+    // setSelectedEvent(null); // 이 줄을 제거하여 오버레이 유지
   }
 
   function deleteEvent(participantId, eventId) {
-    setParticipants((prev) =>
-      prev.map((p) => (p.id !== participantId ? p : { ...p, events: p.events.filter((e) => e.id !== eventId) }))
-    );
+    console.log('deleteEvent 호출됨:', participantId, eventId);
+    
+    // participants 상태를 직접 업데이트
+    setParticipants((prev) => {
+      const updated = prev.map((p) => 
+        p.id !== participantId ? p : { ...p, events: p.events.filter((e) => e.id !== eventId) }
+      );
+      console.log('삭제 후 participants:', updated);
+      return updated;
+    });
+    
     setSelectedEvent(null);
   }
 
@@ -303,6 +386,7 @@ export default function MeetingSchedulerMVP() {
     );
     
     setDragSelection(null);
+    setIsAddingEvent(false); // 일정 추가 완료 시 모드 종료
   }
 
   function onSendReply() {
@@ -333,7 +417,7 @@ export default function MeetingSchedulerMVP() {
     
     if (mode === "participant") {
       // 참여자 모드: 선택된 참여자의 일정만 표시
-      const activeParticipant = currentParticipants.find(p => p.id === activeParticipantId);
+      const activeParticipant = participants.find(p => p.id === activeParticipantId);
       if (activeParticipant) {
         for (const e of activeParticipant.events) {
           out.push({ ...e, participantId: activeParticipant.id, participantName: activeParticipant.name, color: activeParticipant.color });
@@ -341,7 +425,7 @@ export default function MeetingSchedulerMVP() {
       }
     } else {
       // 모임장 모드: 필터 적용된 모든 일정 표시
-      for (const p of currentParticipants) {
+      for (const p of participants) {
         for (const e of p.events) {
           if (ignoredEventIds.has(e.id)) continue; // 모임장 무시
           if (considerOnlyMandatory && !e.mandatory) continue; // 필수만
@@ -352,11 +436,11 @@ export default function MeetingSchedulerMVP() {
     }
     
     return out;
-  }, [currentParticipants, ignoredEventIds, considerOnlyMandatory, selectedRequiredParticipantIds, mode, activeParticipantId]);
+  }, [participants, ignoredEventIds, considerOnlyMandatory, selectedRequiredParticipantIds, mode, activeParticipantId]);
 
   // ====== 공통 빈 시간 계산(리스트용) ======
   const freeSlotsByDay = useMemo(() => {
-    const selectedP = currentParticipants.filter((p) => selectedRequiredParticipantIds.has(p.id));
+    const selectedP = participants.filter((p) => selectedRequiredParticipantIds.has(p.id));
     const slots = {};
     for (let d = 0; d < 7; d++) {
       const busy = [];
@@ -514,13 +598,13 @@ export default function MeetingSchedulerMVP() {
     }
 
     function getEventById(participantId, eventId) {
-      const p = currentParticipants.find((pp) => pp.id === participantId);
+      const p = participants.find((pp) => pp.id === participantId);
       return p?.events.find((ee) => ee.id === eventId) ?? null;
     }
 
     const sel = (() => {
       if (!selectedEvent) return null;
-      const p = currentParticipants.find((pp) => pp.id === selectedEvent.participantId);
+      const p = participants.find((pp) => pp.id === selectedEvent.participantId);
       const ev = p?.events.find((ee) => ee.id === selectedEvent.eventId);
       return ev ? { ...ev, participantId: p?.id, participantName: p?.name, color: p?.color } : null;
     })();
@@ -528,12 +612,17 @@ export default function MeetingSchedulerMVP() {
     return (
       <div 
         ref={colRef} 
-        className="relative border-l border-slate-200" 
+        className="relative border-l border-slate-200"
         onClick={() => { setSelectedEvent(null); setOverlapPicker(null); }}
         style={{ 
-          touchAction: isAddingEvent && !isMobile ? 'none' : 'auto',
           userSelect: isAddingEvent ? 'none' : 'auto',
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          // PC에서 스크롤 완전 차단
+          ...(isAddingEvent && !hasTouchSupport ? {
+            overscrollBehavior: 'none',
+            WebkitOverscrollBehavior: 'none',
+            scrollBehavior: 'auto'
+          } : {})
         }}
         onMouseDown={(ev) => {
           // 일정 요소가 아닌 경우에만 처리
@@ -544,36 +633,35 @@ export default function MeetingSchedulerMVP() {
           if (mode === "participant" && isAddingEvent) {
             // 일정 추가 모드에서만 드래그 처리
             ev.preventDefault();
+            ev.stopPropagation();
+            
+            // 스크롤 방지를 위한 추가 처리
+            ev.currentTarget.style.userSelect = 'none';
+            ev.currentTarget.style.webkitUserSelect = 'none';
+            ev.currentTarget.style.overscrollBehavior = 'none';
+            ev.currentTarget.style.webkitOverscrollBehavior = 'none';
+            ev.currentTarget.style.scrollBehavior = 'auto';
+            
+            // 전역 스크롤 방지 강화
+            document.documentElement.style.overflow = 'hidden';
+            document.documentElement.style.position = 'fixed';
+            document.documentElement.style.width = '100%';
+            document.documentElement.style.height = '100%';
+            
             const startTime = yToTime(ev.clientY);
+            console.log('드래그 시작:', dayIndex, startTime);
             setDragSelection({ day: dayIndex, start: startTime, end: startTime });
           }
         }}
-        onMouseMove={(ev) => {
-          if (mode === "participant" && isAddingEvent && dragSelection && dragSelection.day === dayIndex) {
-            const currentTime = yToTime(ev.clientY);
-            setDragSelection(prev => ({ ...prev, end: currentTime }));
-          }
-        }}
-        onMouseUp={() => {
-          if (mode === "participant" && isAddingEvent && dragSelection) {
-            setIsAddingEvent(false);
-            // 드래그 선택이 완료되면 바로 일정명 입력 오버레이 표시
-          }
-        }}
-        onMouseLeave={() => {
-          if (mode === "participant" && isAddingEvent && dragSelection) {
-            setIsAddingEvent(false);
-          }
-        }}
-        onTouchStart={(ev) => {
+        onTouchStart={hasTouchSupport ? (ev) => {
           // 일정 요소가 아닌 경우에만 처리
           if (ev.target.closest('[data-event]')) {
             return; // 일정 요소는 무시
           }
           
-          if (mode === "participant" && isAddingEvent && isMobile) {
-            // 일정 추가 모드에서만 터치 처리
-            ev.preventDefault();
+          if (mode === "participant" && isAddingEvent) {
+            // 모바일에서만 터치 처리
+            // 이벤트 전파만 방지 (preventDefault 호출 안함)
             ev.stopPropagation();
             const touch = ev.touches[0];
             const touchTime = yToTime(touch.clientY);
@@ -593,19 +681,17 @@ export default function MeetingSchedulerMVP() {
                 setDragSelection({ day: dayIndex, start: touchStartPoint.time, end: touchTime });
                 setTouchStartPoint(null);
                 setIsAddingEvent(false);
-                if (isMobile) {
-                  setShowMobileInput(true);
-                }
+                setShowMobileInput(true);
               }
             }
           }
-        }}
-        onTouchMove={(ev) => {
+        } : undefined}
+        onTouchMove={hasTouchSupport ? (ev) => {
           // 모바일에서는 터치 이동 무시 (드래그 방식 사용 안함)
-        }}
-        onTouchEnd={(ev) => {
+        } : undefined}
+        onTouchEnd={hasTouchSupport ? (ev) => {
           // 모바일에서는 터치 종료 무시
-        }}
+        } : undefined}
       >
         {/* 시간 가이드 */}
         {hours.map((h) => (
@@ -639,7 +725,7 @@ export default function MeetingSchedulerMVP() {
             )}
             
             {/* 모바일 터치 시작점 표시 */}
-            {mode === "participant" && isAddingEvent && isMobile && touchStartPoint && touchStartPoint.day === dayIndex && (
+            {mode === "participant" && isAddingEvent && hasTouchSupport && touchStartPoint && touchStartPoint.day === dayIndex && (
               <div
                 className="absolute left-1 right-1 bg-green-200 border-2 border-green-400 rounded-xl opacity-80"
                 style={{
@@ -654,20 +740,20 @@ export default function MeetingSchedulerMVP() {
             )}
 
         {/* 드래그 완료 후 일정명 입력 오버레이 (데스크톱만) */}
-        {mode === "participant" && !isAddingEvent && dragSelection && dragSelection.day === dayIndex && !isMobile && (
+        {mode === "participant" && !isAddingEvent && dragSelection && dragSelection.day === dayIndex && !hasTouchSupport && (
           <div
             className="absolute left-1 right-1 bg-green-200 border-2 border-green-400 rounded-xl opacity-80"
             style={{
               top: `${timeToPct(Math.min(dragSelection.start, dragSelection.end))}%`,
-              height: `${Math.max(isMobile ? 8 : 4, Math.abs(timeToPct(dragSelection.end) - timeToPct(dragSelection.start)))}%`
+              height: `${Math.max(hasTouchSupport ? 8 : 4, Math.abs(timeToPct(dragSelection.end) - timeToPct(dragSelection.start)))}%`
             }}
           >
-            <div className={isMobile ? "p-4" : "p-2"}>
+            <div className={hasTouchSupport ? "p-4" : "p-2"}>
               <input
                 type="text"
                 placeholder="일정명을 입력하세요"
                 className={`w-full bg-white border border-green-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500 ${
-                  isMobile ? 'text-base py-3 px-4' : 'text-xs'
+                  hasTouchSupport ? 'text-base py-3 px-4' : 'text-xs'
                 }`}
                 autoFocus
                 onKeyDown={(e) => {
@@ -684,6 +770,7 @@ export default function MeetingSchedulerMVP() {
                     }
                   } else if (e.key === 'Escape') {
                     setDragSelection(null);
+                    setIsAddingEvent(false);
                   }
                 }}
                 onBlur={(e) => {
@@ -698,6 +785,7 @@ export default function MeetingSchedulerMVP() {
                     );
                   } else {
                     setDragSelection(null);
+                    setIsAddingEvent(false);
                   }
                 }}
               />
@@ -715,7 +803,13 @@ export default function MeetingSchedulerMVP() {
                 key={e.id + e.participantId}
                 data-event="true"
                 className="absolute left-1 right-1 rounded-xl shadow-sm p-2 text-xs font-medium overflow-hidden cursor-pointer ring-1 ring-black/0 hover:ring-black/10 z-10"
-                style={{ top: `${top}%`, height: `${height}%`, backgroundColor: e.color, opacity: e.mandatory ? 0.9 : 0.55, mixBlendMode: "multiply" }}
+                style={{ 
+                  top: `${top}%`, 
+                  height: `${height}%`, 
+                  backgroundColor: e.color, 
+                  opacity: e.mandatory ? 0.9 : 0.55, 
+                  mixBlendMode: "multiply"
+                }}
                 title={`${e.title} — ${e.participantName}`}
                 onMouseDown={(ev) => {
                   ev.preventDefault();
@@ -739,9 +833,23 @@ export default function MeetingSchedulerMVP() {
                   ev.preventDefault();
                   ev.stopPropagation();
                   console.log('일정 클릭됨:', e.title, e.participantName);
+                  // 클릭 시에도 선택 처리
+                  const clickTime = yToTime(ev.clientY);
+                  const overlaps = events.filter((x) => x.day === dayIndex && x.start <= clickTime && x.end >= clickTime);
+                  if (overlaps.length > 1) {
+                    setSelectedEvent(null);
+                    setOverlapPicker({
+                      day: dayIndex,
+                      topPct: timeToPct(clickTime),
+                      items: overlaps.map((x) => ({ participantId: x.participantId, eventId: x.id, title: x.title, participantName: x.participantName })),
+                    });
+                  } else {
+                    setOverlapPicker(null);
+                    setSelectedEvent({ participantId: e.participantId, eventId: e.id, day: dayIndex, start: e.start });
+                  }
                 }}
-                onTouchStart={(ev) => {
-                  ev.preventDefault();
+                onTouchStart={hasTouchSupport ? (ev) => {
+                  // preventDefault를 호출하지 않고 이벤트 전파만 방지
                   ev.stopPropagation();
                   console.log('일정 터치됨:', e.title, e.participantName);
                   const touch = ev.touches[0];
@@ -758,7 +866,7 @@ export default function MeetingSchedulerMVP() {
                     setOverlapPicker(null);
                     setSelectedEvent({ participantId: e.participantId, eventId: e.id, day: dayIndex, start: e.start });
                   }
-                }}
+                } : undefined}
               >
                 <div className="truncate text-white drop-shadow-sm">{e.title} <span className="opacity-90">· {e.participantName}</span></div>
                 <div className="text-[10px] text-white/90 mt-1">{fmtTime(e.start)}–{fmtTime(e.end)}</div>
@@ -776,7 +884,9 @@ export default function MeetingSchedulerMVP() {
               <div className="px-2 py-1 text-xs text-slate-500">어떤 일정을 변경할까요?</div>
               <div className="max-h-48 overflow-auto mt-1 flex flex-col gap-1">
                 {overlapPicker.items.map((it, idx) => (
-                  <button key={`${it.participantId}-${it.eventId}-${idx}`} className="text-left text-sm px-3 py-2 rounded-xl border hover:bg-slate-50" onClick={() => {
+                  <button key={`${it.participantId}-${it.eventId}-${idx}`} className="text-left text-sm px-3 py-2 rounded-xl border hover:bg-slate-50" onClick={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
                     const evObj = getEventById(it.participantId, it.eventId);
                     const start = evObj ? evObj.start : START_HOUR;
                     console.log('겹친 일정 선택:', it.participantId, it.eventId, overlapPicker.day, start);
@@ -796,24 +906,44 @@ export default function MeetingSchedulerMVP() {
 
         {/* 이벤트 컨텍스트 오버레이 */}
         {sel && selectedEvent?.day === dayIndex && (
-          <div className="absolute z-50 right-2 translate-y-[-6px]" style={{ top: `${timeToPct(selectedEvent.start ?? sel.start)}%` }} onClick={(ev) => ev.stopPropagation()}>
+          <div 
+            className="absolute z-50 right-2 translate-y-[-6px]" 
+            style={{ top: `${timeToPct(selectedEvent.start ?? sel.start)}%` }} 
+            onMouseDown={(ev) => ev.stopPropagation()}
+            onMouseUp={(ev) => ev.stopPropagation()}
+            onClick={(ev) => ev.stopPropagation()}
+          >
             <div className="bg-white border shadow-xl rounded-2xl p-2 w-44">
               <div className="px-2 py-1 text-xs text-slate-500">{sel.title} · {sel.participantName}</div>
               <div className="flex flex-col gap-2 mt-1">
                 <button 
                   className="text-sm px-3 py-2 rounded-xl border hover:bg-slate-50 text-slate-700" 
-                  onClick={() => {
+                  onMouseDown={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                  }}
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
                     console.log('필수 토글:', selectedEvent.participantId, selectedEvent.eventId);
                     toggleMandatory(selectedEvent.participantId, selectedEvent.eventId);
+                    // 오버레이를 닫지 않고 유지
                   }}
                 >
                   {sel.mandatory ? "필수 해제" : "필수로 표시"}
                 </button>
                 <button 
                   className="text-sm px-3 py-2 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50" 
-                  onClick={() => {
+                  onMouseDown={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                  }}
+                  onClick={(ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
                     console.log('일정 삭제:', selectedEvent.participantId, selectedEvent.eventId);
                     deleteEvent(selectedEvent.participantId, selectedEvent.eventId);
+                    // 삭제 후에는 오버레이가 자동으로 닫힘
                   }}
                 >
                   삭제
@@ -829,10 +959,54 @@ export default function MeetingSchedulerMVP() {
   function WeekGrid() {
     return (
       <div 
-        className="rounded-3xl border bg-white shadow-sm overflow-hidden" 
+        className="rounded-3xl border bg-white shadow-sm overflow-hidden"
         style={{ 
-          touchAction: isAddingEvent && !isMobile ? 'none' : 'pan-y',
-          userSelect: isAddingEvent ? 'none' : 'auto'
+          userSelect: isAddingEvent ? 'none' : 'auto',
+          // 드래그 시 스크롤 방지
+          ...(isAddingEvent && !hasTouchSupport ? {
+            overflow: 'hidden',
+            position: 'relative',
+            overscrollBehavior: 'none',
+            WebkitOverscrollBehavior: 'none',
+            // PC에서 스크롤 완전 차단
+            pointerEvents: 'auto',
+            scrollBehavior: 'auto'
+          } : {})
+        }}
+        onMouseMove={(ev) => {
+          if (mode === "participant" && isAddingEvent) {
+            // 일정 추가 모드에서는 모든 마우스 이동에서 스크롤 방지
+            ev.preventDefault();
+            ev.stopPropagation();
+            
+            if (dragSelection) {
+              // 드래그 중일 때만 처리
+              const rect = ev.currentTarget.getBoundingClientRect();
+              const y = ev.clientY - rect.top;
+              const pct = Math.min(Math.max(y / rect.height, 0), 1);
+              const currentTime = START_HOUR + (END_HOUR - START_HOUR) * pct;
+              const roundedTime = Math.round(currentTime * 2) / 2;
+              
+              console.log('드래그 이동:', roundedTime);
+              setDragSelection(prev => ({ ...prev, end: roundedTime }));
+            }
+          }
+        }}
+        onMouseUp={(ev) => {
+          if (mode === "participant" && isAddingEvent && dragSelection) {
+            console.log('드래그 종료:', dragSelection);
+            ev.preventDefault();
+            ev.stopPropagation();
+            
+            setIsAddingEvent(false);
+            // 드래그 선택이 완료되면 바로 일정명 입력 오버레이 표시
+          }
+        }}
+        onMouseLeave={() => {
+          if (mode === "participant" && isAddingEvent && dragSelection) {
+            console.log('마우스가 그리드 영역을 벗어남');
+            setIsAddingEvent(false);
+          }
         }}
       >
         <div className="grid grid-cols-8 bg-slate-50 border-b">
@@ -900,24 +1074,35 @@ export default function MeetingSchedulerMVP() {
             참여자 보기
           </button>
           {mode === "participant" && (
-            <button
-              onClick={() => {
-                setIsAddingEvent(!isAddingEvent);
-                if (!isAddingEvent) {
-                  // 추가 모드로 전환할 때 터치 시작점 초기화
-                  setTouchStartPoint(null);
-                  setDragSelection(null);
-                  setShowMobileInput(false);
-                }
-              }}
-              className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                isAddingEvent 
-                  ? 'bg-green-600 text-white hover:bg-green-700' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {isAddingEvent ? '저장' : '추가'}
-            </button>
+            <div className="flex items-center gap-2">
+              <select 
+                className="border rounded-xl px-3 py-2 text-sm" 
+                value={activeParticipantId} 
+                onChange={(e) => setActiveParticipantId(e.target.value)}
+              >
+                {participants.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  setIsAddingEvent(!isAddingEvent);
+                  if (!isAddingEvent) {
+                    // 추가 모드로 전환할 때 터치 시작점 초기화
+                    setTouchStartPoint(null);
+                    setDragSelection(null);
+                    setShowMobileInput(false);
+                  }
+                }}
+                className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                  isAddingEvent 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {isAddingEvent ? '저장' : '추가'}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -930,7 +1115,7 @@ export default function MeetingSchedulerMVP() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
           <div className="text-blue-800 font-medium mb-2">📅 일정 추가 모드</div>
           <div className="text-sm text-blue-600">
-            {isMobile ? (
+            {hasTouchSupport ? (
               <>
                 <div>1️⃣ 첫 번째 터치: 시작 시간</div>
                 <div>2️⃣ 두 번째 터치: 종료 시간</div>
