@@ -8,7 +8,7 @@ import React, { useMemo, useState, useRef } from "react";
 
 export default function MeetingSchedulerMVP() {
   // ====== 상수 ======
-  const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+  const DAYS = ["월", "화", "수", "목", "금"];
   const START_HOUR = 9;
   const END_HOUR = 19; // exclusive
 
@@ -22,6 +22,36 @@ export default function MeetingSchedulerMVP() {
   ];
 
   // ====== 샘플 데이터 ======
+  // 팀 및 개인 데이터
+  const teams = [
+    {
+      id: "team1",
+      name: "개발팀",
+      members: ["김철수", "박민수", "정수진", "최지훈"]
+    },
+    {
+      id: "team2", 
+      name: "디자인팀",
+      members: ["이영희", "한소영"]
+    },
+    {
+      id: "team3",
+      name: "마케팅팀", 
+      members: ["강동현", "윤서연"]
+    },
+    {
+      id: "team4",
+      name: "경영팀",
+      members: ["임태호", "송미래"]
+    }
+  ];
+
+  const allPeople = [
+    "김철수", "이영희", "박민수", "정수진", "최지훈", 
+    "한소영", "강동현", "윤서연", "임태호", "송미래",
+    "황원준", "정유진", "한지은"
+  ];
+
   const initialParticipants = [
     {
       id: "p1",
@@ -50,12 +80,11 @@ export default function MeetingSchedulerMVP() {
       events: [
         { id: "e7", day: 2, start: 13.0, end: 15.0, title: "촬영 스케줄", mandatory: false },
         { id: "e8", day: 3, start: 11.0, end: 12.5, title: "브랜드 미팅", mandatory: false },
-        { id: "e9", day: 5, start: 9.0, end: 10.0, title: "계약서 검토", mandatory: false },
       ],
     },
   ];
 
-  // 10명 참여자 데이터
+  // 10명 참여자 데이터 (월~금)
   const largeParticipants = [
     {
       id: "p1", name: "김철수", color: "#3B82F6", mandatory: true,
@@ -209,11 +238,160 @@ export default function MeetingSchedulerMVP() {
     },
   ];
 
+  // 두 번째 주 데이터 (시간대 분산 + 겹치는 일정)
+  const secondWeekParticipants = [
+    {
+      id: "p1", name: "김철수", color: "#3B82F6", mandatory: true,
+      events: [
+        { id: "e1_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
+        { id: "e2_w2", day: 0, start: 10.0, end: 11.0, title: "프로젝트 마무리", mandatory: false },
+        { id: "e3_w2", day: 0, start: 14.0, end: 15.0, title: "고객 피드백", mandatory: true },
+        { id: "e4_w2", day: 1, start: 9.5, end: 10.5, title: "품질 검토", mandatory: false },
+        { id: "e5_w2", day: 1, start: 11.0, end: 12.0, title: "시스템 점검", mandatory: true },
+        { id: "e6_w2", day: 2, start: 10.0, end: 11.0, title: "최종 발표", mandatory: true },
+        { id: "e7_w2", day: 2, start: 15.0, end: 16.0, title: "결과 분석", mandatory: false },
+        { id: "e8_w2", day: 3, start: 9.0, end: 10.0, title: "팀 회의", mandatory: true },
+        { id: "e9_w2", day: 4, start: 11.0, end: 12.0, title: "문서 정리", mandatory: false },
+      ],
+    },
+    {
+      id: "p2", name: "이영희", color: "#EF4444", mandatory: true,
+      events: [
+        { id: "e10_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
+        { id: "e11_w2", day: 0, start: 10.5, end: 11.5, title: "디자인 최종", mandatory: false },
+        { id: "e12_w2", day: 0, start: 14.5, end: 15.5, title: "사용자 테스트", mandatory: true },
+        { id: "e13_w2", day: 1, start: 9.0, end: 10.0, title: "결과 정리", mandatory: false },
+        { id: "e14_w2", day: 1, start: 11.5, end: 12.5, title: "프로토타입 완성", mandatory: true },
+        { id: "e15_w2", day: 2, start: 9.5, end: 10.5, title: "최종 검토", mandatory: true },
+        { id: "e16_w2", day: 2, start: 15.5, end: 16.5, title: "프레젠테이션", mandatory: false },
+        { id: "e17_w2", day: 3, start: 10.0, end: 11.0, title: "디자인 리뷰", mandatory: true },
+        { id: "e18_w2", day: 4, start: 9.0, end: 10.0, title: "최종 정리", mandatory: false },
+      ],
+    },
+    {
+      id: "p3", name: "박민수", color: "#10B981", mandatory: true,
+      events: [
+        { id: "e19_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
+        { id: "e20_w2", day: 0, start: 11.0, end: 12.0, title: "코드 최적화", mandatory: false },
+        { id: "e21_w2", day: 0, start: 16.0, end: 17.0, title: "성능 테스트", mandatory: true },
+        { id: "e22_w2", day: 1, start: 9.5, end: 10.5, title: "버그 수정", mandatory: false },
+        { id: "e23_w2", day: 1, start: 11.0, end: 12.0, title: "배포 준비", mandatory: true },
+        { id: "e24_w2", day: 2, start: 9.0, end: 10.0, title: "최종 테스트", mandatory: true },
+        { id: "e25_w2", day: 2, start: 14.0, end: 15.0, title: "문서화", mandatory: false },
+        { id: "e26_w2", day: 3, start: 9.5, end: 10.5, title: "코드 리뷰", mandatory: true },
+        { id: "e27_w2", day: 4, start: 10.0, end: 11.0, title: "시스템 점검", mandatory: false },
+      ],
+    },
+    {
+      id: "p4", name: "정수진", color: "#F59E0B", mandatory: false,
+      events: [
+        { id: "e28_w2", day: 0, start: 10.0, end: 11.0, title: "테스트 완료", mandatory: false },
+        { id: "e29_w2", day: 0, start: 15.0, end: 16.0, title: "품질 보고", mandatory: true },
+        { id: "e30_w2", day: 1, start: 9.0, end: 10.0, title: "최종 검증", mandatory: true },
+        { id: "e31_w2", day: 1, start: 14.0, end: 15.0, title: "결과 정리", mandatory: false },
+        { id: "e32_w2", day: 2, start: 10.5, end: 11.5, title: "최종 점검", mandatory: true },
+        { id: "e33_w2", day: 2, start: 16.0, end: 17.0, title: "완료 보고", mandatory: false },
+        { id: "e34_w2", day: 3, start: 9.0, end: 10.0, title: "품질 검토", mandatory: true },
+        { id: "e35_w2", day: 4, start: 11.5, end: 12.5, title: "테스트 정리", mandatory: false },
+      ],
+    },
+    {
+      id: "p5", name: "최지훈", color: "#8B5CF6", mandatory: false,
+      events: [
+        { id: "e36_w2", day: 0, start: 9.5, end: 10.5, title: "보안 점검", mandatory: true },
+        { id: "e37_w2", day: 0, start: 11.5, end: 12.5, title: "시스템 안정화", mandatory: false },
+        { id: "e38_w2", day: 1, start: 9.0, end: 10.0, title: "모니터링 설정", mandatory: true },
+        { id: "e39_w2", day: 1, start: 15.0, end: 16.0, title: "백업 완료", mandatory: false },
+        { id: "e40_w2", day: 2, start: 9.0, end: 10.0, title: "최종 점검", mandatory: true },
+        { id: "e41_w2", day: 2, start: 14.5, end: 15.5, title: "보고서 작성", mandatory: false },
+        { id: "e42_w2", day: 3, start: 10.5, end: 11.5, title: "인프라 점검", mandatory: true },
+        { id: "e43_w2", day: 4, start: 9.5, end: 10.5, title: "시스템 정리", mandatory: false },
+      ],
+    },
+    {
+      id: "p6", name: "한소영", color: "#EC4899", mandatory: false,
+      events: [
+        { id: "e44_w2", day: 0, start: 9.0, end: 10.0, title: "사용자 피드백", mandatory: true },
+        { id: "e45_w2", day: 0, start: 15.0, end: 16.0, title: "개선사항 정리", mandatory: false },
+        { id: "e46_w2", day: 1, start: 10.0, end: 11.0, title: "최종 디자인", mandatory: true },
+        { id: "e47_w2", day: 1, start: 14.5, end: 15.5, title: "사용성 검증", mandatory: false },
+        { id: "e48_w2", day: 2, start: 9.5, end: 10.5, title: "결과 발표", mandatory: true },
+        { id: "e49_w2", day: 2, start: 16.0, end: 17.0, title: "최종 정리", mandatory: false },
+        { id: "e50_w2", day: 3, start: 9.0, end: 10.0, title: "디자인 검토", mandatory: true },
+        { id: "e51_w2", day: 4, start: 10.5, end: 11.5, title: "사용자 테스트", mandatory: false },
+      ],
+    },
+    {
+      id: "p7", name: "강동현", color: "#06B6D4", mandatory: false,
+      events: [
+        { id: "e52_w2", day: 0, start: 9.5, end: 10.5, title: "데이터 분석 완료", mandatory: true },
+        { id: "e53_w2", day: 0, start: 11.0, end: 12.0, title: "인사이트 정리", mandatory: false },
+        { id: "e54_w2", day: 1, start: 9.0, end: 10.0, title: "최종 리포트", mandatory: true },
+        { id: "e55_w2", day: 1, start: 15.5, end: 16.5, title: "시각화 완성", mandatory: false },
+        { id: "e56_w2", day: 2, start: 9.0, end: 10.0, title: "발표 준비", mandatory: true },
+        { id: "e57_w2", day: 2, start: 14.0, end: 15.0, title: "최종 검토", mandatory: false },
+        { id: "e58_w2", day: 3, start: 10.0, end: 11.0, title: "데이터 정리", mandatory: true },
+        { id: "e59_w2", day: 4, start: 9.0, end: 10.0, title: "분석 보고", mandatory: false },
+      ],
+    },
+    {
+      id: "p8", name: "윤서연", color: "#84CC16", mandatory: false,
+      events: [
+        { id: "e60_w2", day: 0, start: 9.0, end: 10.0, title: "재무 정리", mandatory: true },
+        { id: "e61_w2", day: 0, start: 14.5, end: 15.5, title: "예산 마무리", mandatory: false },
+        { id: "e62_w2", day: 1, start: 9.5, end: 10.5, title: "최종 보고", mandatory: true },
+        { id: "e63_w2", day: 1, start: 16.0, end: 17.0, title: "정산 완료", mandatory: false },
+        { id: "e64_w2", day: 2, start: 9.0, end: 10.0, title: "재무 검토", mandatory: true },
+        { id: "e65_w2", day: 2, start: 15.0, end: 16.0, title: "최종 정리", mandatory: false },
+        { id: "e66_w2", day: 3, start: 9.5, end: 10.5, title: "예산 검토", mandatory: true },
+        { id: "e67_w2", day: 4, start: 10.0, end: 11.0, title: "재무 보고", mandatory: false },
+      ],
+    },
+    {
+      id: "p9", name: "임태호", color: "#F97316", mandatory: false,
+      events: [
+        { id: "e68_w2", day: 0, start: 9.0, end: 10.0, title: "법무 검토 완료", mandatory: true },
+        { id: "e69_w2", day: 0, start: 11.0, end: 12.0, title: "계약 마무리", mandatory: false },
+        { id: "e70_w2", day: 1, start: 9.0, end: 10.0, title: "최종 검토", mandatory: true },
+        { id: "e71_w2", day: 1, start: 15.0, end: 16.0, title: "문서 정리", mandatory: false },
+        { id: "e72_w2", day: 2, start: 9.5, end: 10.5, title: "법무 보고", mandatory: true },
+        { id: "e73_w2", day: 2, start: 16.0, end: 17.0, title: "최종 정리", mandatory: false },
+        { id: "e74_w2", day: 3, start: 9.0, end: 10.0, title: "계약 검토", mandatory: true },
+        { id: "e75_w2", day: 4, start: 11.0, end: 12.0, title: "법무 정리", mandatory: false },
+      ],
+    },
+    {
+      id: "p10", name: "송미래", color: "#6366F1", mandatory: false,
+      events: [
+        { id: "e76_w2", day: 0, start: 9.5, end: 10.5, title: "HR 정리", mandatory: true },
+        { id: "e77_w2", day: 0, start: 14.0, end: 15.0, title: "평가 완료", mandatory: false },
+        { id: "e78_w2", day: 1, start: 9.0, end: 10.0, title: "교육 마무리", mandatory: true },
+        { id: "e79_w2", day: 1, start: 15.5, end: 16.5, title: "성과 정리", mandatory: false },
+        { id: "e80_w2", day: 2, start: 9.0, end: 10.0, title: "최종 보고", mandatory: true },
+        { id: "e81_w2", day: 2, start: 14.5, end: 15.5, title: "팀 정리", mandatory: false },
+        { id: "e82_w2", day: 3, start: 10.0, end: 11.0, title: "인사 검토", mandatory: true },
+        { id: "e83_w2", day: 4, start: 9.5, end: 10.5, title: "HR 보고", mandatory: false },
+      ],
+    },
+  ];
+
   // ====== 상태 ======
   const [demoMode, setDemoMode] = useState("small"); // small | large - 데모 모드
+  const [currentWeek, setCurrentWeek] = useState(0); // 0: 첫 번째 주, 1: 두 번째 주
+  const [inviteData, setInviteData] = useState(null); // 초대 메시지에서 생성된 데이터
+  const [activeTab, setActiveTab] = useState("calendar"); // calendar | invite - 활성 탭
+  const [selectedInviteEvent, setSelectedInviteEvent] = useState(null); // 초대 데이터에서 선택된 이벤트
+  const [inviteOverlapPicker, setInviteOverlapPicker] = useState(null); // 초대 데이터에서 중복 일정 선택
   
-  // 데모 모드에 따른 참여자 데이터 선택
-  const currentParticipants = demoMode === "large" ? largeParticipants : initialParticipants;
+  // 데모 모드와 주간에 따른 참여자 데이터 선택
+  const getParticipantsForWeek = (demoMode, week) => {
+    if (demoMode === "large") {
+      return week === 0 ? largeParticipants : secondWeekParticipants;
+    }
+    return initialParticipants; // 3명 데모는 주간 구분 없음
+  };
+  
+  const currentParticipants = getParticipantsForWeek(demoMode, currentWeek);
   const [participants, setParticipants] = useState(currentParticipants);
   const [mode, setMode] = useState("organizer"); // organizer | participant
   const [activeParticipantId, setActiveParticipantId] = useState("p1");
@@ -226,6 +404,7 @@ export default function MeetingSchedulerMVP() {
   const [dragSelection, setDragSelection] = useState(null); // {day, start, end}
   const [touchStartPoint, setTouchStartPoint] = useState(null); // {day, time} - 모바일 터치 시작점
   const [showMobileInput, setShowMobileInput] = useState(false); // 모바일 전용 입력 박스 표시
+  
 
   // ====== 유틸 ======
   const hours = useMemo(() => {
@@ -237,9 +416,9 @@ export default function MeetingSchedulerMVP() {
   // 터치 지원 감지 (이벤트 핸들러에서만 사용)
   const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   
-  // 데모 모드에 따른 참여자 데이터 및 필수 참여자 초기화
+  // 데모 모드와 주간에 따른 참여자 데이터 및 필수 참여자 초기화
   React.useEffect(() => {
-    const newParticipants = demoMode === "large" ? largeParticipants : initialParticipants;
+    const newParticipants = getParticipantsForWeek(demoMode, currentWeek);
     setParticipants(newParticipants);
     
     // activeParticipantId가 새로운 참여자 목록에 없으면 첫 번째 참여자로 설정
@@ -253,7 +432,7 @@ export default function MeetingSchedulerMVP() {
     } else {
       setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3"]));
     }
-  }, [demoMode]);
+  }, [demoMode, currentWeek]);
 
   // 일정 추가 모드에서 스크롤 방지
   React.useEffect(() => {
@@ -411,6 +590,361 @@ export default function MeetingSchedulerMVP() {
     });
   }
 
+  // ====== 초대 메시지 작성 관련 함수들 ======
+  function openInviteWindow() {
+    const newWindow = window.open(
+      '',
+      'inviteMessage',
+      'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
+    );
+    
+    if (newWindow) {
+      // 메인 페이지에서 데이터를 받을 수 있도록 전역 함수 등록
+      window.receiveInviteData = (data) => {
+        setInviteData(data);
+        console.log('초대 데이터 수신:', data);
+      };
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>초대 메시지 작성</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-50 p-6">
+          <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+              <h1 class="text-2xl font-bold text-gray-900 mb-6">초대 메시지 작성</h1>
+              
+              <div class="space-y-6">
+                <!-- 일정명 입력 -->
+                <div class="rounded-2xl border bg-white shadow-sm p-6">
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">일정명</label>
+                    <input
+                      type="text"
+                      id="meetingName"
+                      placeholder="일정명을 입력하세요"
+                      class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <!-- 참여자 검색 및 선택 -->
+                <div class="rounded-2xl border bg-white shadow-sm p-6">
+                  <div class="mb-4">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">참여자 검색</label>
+                    <div class="relative">
+                      <input
+                        type="text"
+                        id="searchQuery"
+                        placeholder="팀이름 또는 사람이름을 입력하세요"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- 선택된 참여자 리스트 -->
+                  <div id="selectedParticipants" class="mt-4" style="display: none;">
+                    <div class="text-sm font-semibold text-slate-700 mb-3">선택된 참여자</div>
+                    <div id="participantList" class="flex flex-wrap gap-2"></div>
+                  </div>
+                </div>
+
+                <!-- 전송 버튼 -->
+                <div class="flex justify-center">
+                  <button
+                    id="generateSchedule"
+                    class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+                    disabled
+                  >
+                    일정표 생성 및 전송
+                  </button>
+                </div>
+
+                <!-- 생성된 일정표 표시 -->
+                <div id="generatedSchedule" class="rounded-2xl border bg-white shadow-sm" style="display: none;">
+                  <div class="px-4 py-3 border-b text-sm font-semibold">
+                    생성된 일정표
+                  </div>
+                  <div class="p-4">
+                    <div class="text-sm text-slate-600 mb-4">
+                      선택된 참여자들의 일정표가 생성되었습니다.
+                    </div>
+                    <div id="scheduleContent" class="grid gap-3"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            // 팀 및 개인 데이터
+            const teams = [
+              { id: "team1", name: "개발팀", members: ["김철수", "박민수", "정수진", "최지훈"] },
+              { id: "team2", name: "디자인팀", members: ["이영희", "한소영"] },
+              { id: "team3", name: "마케팅팀", members: ["강동현", "윤서연"] },
+              { id: "team4", name: "경영팀", members: ["임태호", "송미래"] }
+            ];
+
+            const allPeople = [
+              "김철수", "이영희", "박민수", "정수진", "최지훈", 
+              "한소영", "강동현", "윤서연", "임태호", "송미래",
+              "황원준", "정유진", "한지은"
+            ];
+
+            const palette = ["#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"];
+            const DAYS = ["월", "화", "수", "목", "금"];
+            const START_HOUR = 9;
+            const END_HOUR = 19;
+
+            let selectedParticipants = [];
+
+            function fmtTime(t) {
+              const h = Math.floor(t);
+              const m = Math.round((t - h) * 60);
+              return \`\${String(h).padStart(2, "0")}:\${m === 0 ? "00" : "30"}\`;
+            }
+
+            function getAutocompleteResults(query) {
+              if (!query.trim()) return [];
+              
+              const results = [];
+              
+              // 팀 검색
+              teams.forEach(team => {
+                if (team.name.includes(query)) {
+                  results.push({
+                    type: 'team',
+                    id: team.id,
+                    name: team.name,
+                    members: team.members
+                  });
+                }
+              });
+              
+              // 개인 검색
+              allPeople.forEach(person => {
+                if (person.includes(query)) {
+                  results.push({
+                    type: 'person',
+                    id: person,
+                    name: person,
+                    members: [person]
+                  });
+                }
+              });
+              
+              return results.slice(0, 5);
+            }
+
+            function addParticipant(item) {
+              const newParticipant = {
+                id: item.id,
+                name: item.name,
+                type: item.type,
+                members: item.members,
+                mandatory: false
+              };
+              
+              selectedParticipants.push(newParticipant);
+              document.getElementById('searchQuery').value = '';
+              updateParticipantList();
+              updateGenerateButton();
+            }
+
+            function removeParticipant(id) {
+              selectedParticipants = selectedParticipants.filter(p => p.id !== id);
+              updateParticipantList();
+              updateGenerateButton();
+            }
+
+            function toggleParticipantMandatory(id) {
+              const participant = selectedParticipants.find(p => p.id === id);
+              if (participant) {
+                participant.mandatory = !participant.mandatory;
+                updateParticipantList();
+              }
+            }
+
+            function updateParticipantList() {
+              const container = document.getElementById('selectedParticipants');
+              const list = document.getElementById('participantList');
+              
+              if (selectedParticipants.length === 0) {
+                container.style.display = 'none';
+                return;
+              }
+              
+              container.style.display = 'block';
+              list.innerHTML = selectedParticipants.map(participant => \`
+                <div class="relative bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 pr-8">
+                  <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full \${participant.type === 'team' ? 'bg-blue-500' : 'bg-green-500'}"></span>
+                    <span class="font-medium text-blue-800">\${participant.name}</span>
+                    \${participant.mandatory ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">필수</span>' : ''}
+                  </div>
+                  
+                  <button
+                    onclick="removeParticipant('\${participant.id}')"
+                    class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full"
+                  >
+                    ×
+                  </button>
+                  
+                  <button
+                    onclick="toggleParticipantMandatory('\${participant.id}')"
+                    class="absolute top-1 left-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-full"
+                    title="\${participant.mandatory ? '필수 해제' : '필수로 설정'}"
+                  >
+                    \${participant.mandatory ? '★' : '☆'}
+                  </button>
+                </div>
+              \`).join('');
+            }
+
+            function updateGenerateButton() {
+              const meetingName = document.getElementById('meetingName').value.trim();
+              const button = document.getElementById('generateSchedule');
+              button.disabled = selectedParticipants.length === 0 || !meetingName;
+            }
+
+            function generateRandomSchedule() {
+              if (selectedParticipants.length === 0) return;
+              
+              // 선택된 참여자들의 모든 멤버 수집
+              const allMembers = [];
+              selectedParticipants.forEach(participant => {
+                participant.members.forEach(member => {
+                  if (!allMembers.includes(member)) {
+                    allMembers.push(member);
+                  }
+                });
+              });
+              
+              // 무작위 일정 데이터 생성 (총 40개)
+              const randomEvents = [];
+              const eventTitles = [
+                "팀 미팅", "프로젝트 검토", "클라이언트 상담", "기술 세미나", 
+                "디자인 리뷰", "코드 리뷰", "사용자 테스트", "보고서 작성",
+                "브레인스토밍", "성과 평가", "교육 세션", "네트워킹",
+                "제품 기획", "마케팅 전략", "품질 관리", "고객 지원",
+                "연구 개발", "운영 회의", "재무 검토", "인사 관리"
+              ];
+              
+              // 총 40개의 이벤트 생성
+              const totalEvents = 40;
+              const eventsPerMember = Math.floor(totalEvents / allMembers.length);
+              const remainingEvents = totalEvents % allMembers.length;
+              
+              allMembers.forEach((member, index) => {
+                const memberEvents = [];
+                const eventCount = eventsPerMember + (index < remainingEvents ? 1 : 0);
+                
+                for (let i = 0; i < eventCount; i++) {
+                  const day = Math.floor(Math.random() * 5);
+                  const start = START_HOUR + Math.random() * (END_HOUR - START_HOUR - 1);
+                  const end = start + 1 + Math.random() * 3; // 최소 1시간, 최대 4시간
+                  
+                  memberEvents.push({
+                    id: \`e_\${member}_\${i}\`,
+                    day,
+                    start: Math.round(start * 2) / 2,
+                    end: Math.round(end * 2) / 2,
+                    title: eventTitles[Math.floor(Math.random() * eventTitles.length)],
+                    mandatory: Math.random() > 0.5
+                  });
+                }
+                
+                randomEvents.push({
+                  id: \`p_\${member}\`,
+                  name: member,
+                  color: palette[index % palette.length],
+                  events: memberEvents
+                });
+              });
+              
+              displayGeneratedSchedule(randomEvents);
+            }
+
+            function displayGeneratedSchedule(schedule) {
+              const container = document.getElementById('generatedSchedule');
+              const content = document.getElementById('scheduleContent');
+              const meetingName = document.getElementById('meetingName').value;
+              
+              document.querySelector('#generatedSchedule .px-4.py-3').textContent = \`생성된 일정표 - \${meetingName}\`;
+              
+              content.innerHTML = schedule.map(participant => \`
+                <div class="border rounded-xl p-3 bg-slate-50">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: \${participant.color}"></span>
+                    <span class="font-medium">\${participant.name}</span>
+                  </div>
+                  <div class="grid gap-1">
+                    \${participant.events.map(event => \`
+                      <div class="text-sm text-slate-600">
+                        \${DAYS[event.day]} \${fmtTime(event.start)}-\${fmtTime(event.end)}: \${event.title}
+                        \${event.mandatory ? '<span class="text-red-600 ml-2">(필수)</span>' : ''}
+                      </div>
+                    \`).join('')}
+                  </div>
+                </div>
+              \`).join('');
+              
+              container.style.display = 'block';
+              
+              // 메인 페이지로 데이터 전송
+              if (window.opener && window.opener.receiveInviteData) {
+                const inviteData = {
+                  meetingName: meetingName,
+                  participants: selectedParticipants,
+                  schedule: schedule,
+                  timestamp: new Date().toISOString()
+                };
+                window.opener.receiveInviteData(inviteData);
+                
+                // 전송 완료 메시지
+                alert('초대 메시지가 전송되었습니다! 메인 페이지에서 일정표를 확인하세요.');
+              }
+            }
+
+            // 이벤트 리스너
+            document.getElementById('meetingName').addEventListener('input', updateGenerateButton);
+            document.getElementById('searchQuery').addEventListener('input', function(e) {
+              const query = e.target.value;
+              if (query.length > 0) {
+                const results = getAutocompleteResults(query);
+                if (results.length > 0) {
+                  // 간단한 자동완성 (실제로는 더 복잡한 UI가 필요)
+                  console.log('검색 결과:', results);
+                }
+              }
+            });
+            document.getElementById('generateSchedule').addEventListener('click', generateRandomSchedule);
+
+            // Enter 키로 검색
+            document.getElementById('searchQuery').addEventListener('keydown', function(e) {
+              if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                if (query) {
+                  const results = getAutocompleteResults(query);
+                  if (results.length > 0) {
+                    addParticipant(results[0]);
+                  }
+                }
+              }
+            });
+          </script>
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
+    }
+  }
+
+
   // 화면에 표시할 이벤트 집합(필터 적용)
   const visibleEvents = useMemo(() => {
     const out = [];
@@ -442,7 +976,7 @@ export default function MeetingSchedulerMVP() {
   const freeSlotsByDay = useMemo(() => {
     const selectedP = participants.filter((p) => selectedRequiredParticipantIds.has(p.id));
     const slots = {};
-    for (let d = 0; d < 7; d++) {
+    for (let d = 0; d < 5; d++) {
       const busy = [];
       for (const p of selectedP) {
         for (const e of p.events) {
@@ -581,6 +1115,7 @@ export default function MeetingSchedulerMVP() {
       </div>
     );
   }
+
 
   // ====== 주간 그리드 ======
   function DayColumn({ dayIndex, events }) {
@@ -879,8 +1414,16 @@ export default function MeetingSchedulerMVP() {
 
         {/* 겹침 선택 팝업 */}
         {overlapPicker && overlapPicker.day === dayIndex && (
-          <div className="absolute z-50 right-2 translate-y-[-6px]" style={{ top: `${overlapPicker.topPct}%` }} onClick={(ev) => ev.stopPropagation()}>
-            <div className="bg-white border shadow-xl rounded-2xl p-2 w-56">
+          <div 
+            className={`absolute z-50 translate-y-[-6px] ${
+              dayIndex === 0 ? 'left-2' : 
+              dayIndex === 4 ? 'right-2' : 
+              'left-1/2 transform -translate-x-1/2'
+            }`} 
+            style={{ top: `${overlapPicker.topPct}%` }} 
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div className="bg-white border shadow-xl rounded-2xl p-2 w-56 max-w-[calc(100vw-2rem)]">
               <div className="px-2 py-1 text-xs text-slate-500">어떤 일정을 변경할까요?</div>
               <div className="max-h-48 overflow-auto mt-1 flex flex-col gap-1">
                 {overlapPicker.items.map((it, idx) => (
@@ -907,13 +1450,17 @@ export default function MeetingSchedulerMVP() {
         {/* 이벤트 컨텍스트 오버레이 */}
         {sel && selectedEvent?.day === dayIndex && (
           <div 
-            className="absolute z-50 right-2 translate-y-[-6px]" 
+            className={`absolute z-50 translate-y-[-6px] ${
+              dayIndex === 0 ? 'left-2' : 
+              dayIndex === 4 ? 'right-2' : 
+              'left-1/2 transform -translate-x-1/2'
+            }`}
             style={{ top: `${timeToPct(selectedEvent.start ?? sel.start)}%` }} 
             onMouseDown={(ev) => ev.stopPropagation()}
             onMouseUp={(ev) => ev.stopPropagation()}
             onClick={(ev) => ev.stopPropagation()}
           >
-            <div className="bg-white border shadow-xl rounded-2xl p-2 w-44">
+            <div className="bg-white border shadow-xl rounded-2xl p-2 w-44 max-w-[calc(100vw-2rem)]">
               <div className="px-2 py-1 text-xs text-slate-500">{sel.title} · {sel.participantName}</div>
               <div className="flex flex-col gap-2 mt-1">
                 <button 
@@ -1009,13 +1556,13 @@ export default function MeetingSchedulerMVP() {
           }
         }}
       >
-        <div className="grid grid-cols-8 bg-slate-50 border-b">
+        <div className="grid grid-cols-6 bg-slate-50 border-b">
           <div className="p-3 text-xs text-slate-500">시간</div>
           {DAYS.map((d) => (
             <div key={d} className="p-3 text-center text-xs font-semibold text-slate-700 border-l">{d}</div>
           ))}
         </div>
-        <div className="grid grid-cols-8">
+        <div className="grid grid-cols-6">
           {/* 시간 라벨 열 */}
           <div className="border-r">
             {hours.map((h) => (
@@ -1037,7 +1584,14 @@ export default function MeetingSchedulerMVP() {
       <div className="flex flex-col md:flex-row md:items-end gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">모임 초대·조율 — 주간 캘린더 MVP</h1>
-          <p className="text-sm text-slate-600 mt-1">초대 구간: <b>10월 24일 ~ 10월 31일</b> · 목적: <b>팀미팅</b> · 구성: {demoMode === "large" ? "10명 참여자" : "황원준, 정유진, 한지은"}</p>
+          <p className="text-sm text-slate-600 mt-1">
+            초대 구간: <b>10월 24일 ~ 10월 31일</b> · 목적: <b>팀미팅</b> · 구성: {demoMode === "large" ? "10명 참여자" : "황원준, 정유진, 한지은"}
+            {demoMode === "large" && (
+              <span className="ml-2 text-blue-600 font-medium">
+                · {currentWeek === 0 ? '1주차 (10월 24일~30일)' : '2주차 (10월 31일~11월 6일)'}
+              </span>
+            )}
+          </p>
         </div>
         
         {/* 데모 모드 탭 */}
@@ -1065,195 +1619,565 @@ export default function MeetingSchedulerMVP() {
             </button>
           </div>
         </div>
+
+        {/* 주간 네비게이션 (10명 데모 또는 사용자 일정 데모에서 표시) */}
+        {(demoMode === "large" || activeTab === "invite") && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentWeek(Math.max(0, currentWeek - 1))}
+              disabled={currentWeek === 0}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                currentWeek === 0 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border'
+              }`}
+            >
+              ← 이전주
+            </button>
+            <span className="text-sm text-slate-600 font-medium">
+              {currentWeek === 0 ? '1주차' : '2주차'}
+            </span>
+            <button
+              onClick={() => setCurrentWeek(Math.min(1, currentWeek + 1))}
+              disabled={currentWeek === 1}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                currentWeek === 1 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border'
+              }`}
+            >
+              다음주 →
+            </button>
+          </div>
+        )}
         
         <div className="flex items-center gap-2 md:ml-auto">
-          <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "organizer" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("organizer")}>
-            모임장 보기
+          {/* 탭 네비게이션 */}
+          <div className="flex bg-slate-100 rounded-xl p-1 mr-4">
+            <button
+              onClick={() => setActiveTab("calendar")}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "calendar" 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              캘린더
+            </button>
+            <button
+              onClick={() => setActiveTab("invite")}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === "invite" 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              사용자 일정 데모
+            </button>
+          </div>
+
+          {(activeTab === "calendar" || activeTab === "invite") && (
+            <>
+              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "organizer" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("organizer")}>
+                모임장
+              </button>
+              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "participant" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("participant")}>
+                참여자
+              </button>
+              {mode === "participant" && (
+                <div className="flex items-center gap-2">
+                  <select 
+                    className="border rounded-xl px-3 py-2 text-sm" 
+                    value={activeParticipantId} 
+                    onChange={(e) => setActiveParticipantId(e.target.value)}
+                  >
+                    {participants.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => {
+                      setIsAddingEvent(!isAddingEvent);
+                      if (!isAddingEvent) {
+                        // 추가 모드로 전환할 때 터치 시작점 초기화
+                        setTouchStartPoint(null);
+                        setDragSelection(null);
+                        setShowMobileInput(false);
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-xl font-medium transition-colors ${
+                      isAddingEvent 
+                        ? 'bg-green-600 text-white hover:bg-green-700' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {isAddingEvent ? '저장' : '추가'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+          
+          {/* 초대 메시지 작성 버튼 */}
+          <button
+            onClick={openInviteWindow}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+          >
+            초대 메시지 작성
           </button>
-          <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "participant" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("participant")}>
-            참여자 보기
-          </button>
-          {mode === "participant" && (
-            <div className="flex items-center gap-2">
-              <select 
-                className="border rounded-xl px-3 py-2 text-sm" 
-                value={activeParticipantId} 
-                onChange={(e) => setActiveParticipantId(e.target.value)}
-              >
-                {participants.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+        </div>
+      </div>
+
+      {/* 탭별 콘텐츠 */}
+      {activeTab === "calendar" ? (
+        <>
+          {/* 주간 캘린더 */}
+          <WeekGrid />
+          
+          {/* 추가 모드 안내 */}
+          {mode === "participant" && isAddingEvent && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+              <div className="text-blue-800 font-medium mb-2">📅 일정 추가 모드</div>
+              <div className="text-sm text-blue-600">
+                {hasTouchSupport ? (
+                  <>
+                    <div>1️⃣ 첫 번째 터치: 시작 시간</div>
+                    <div>2️⃣ 두 번째 터치: 종료 시간</div>
+                    <div className="text-xs text-blue-500 mt-1">다른 요일이나 이전 시간을 터치하면 새 시작점으로 설정됩니다</div>
+                  </>
+                ) : (
+                  "달력에서 원하는 시간대를 드래그하여 일정을 추가하세요"
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 모바일 전용 입력 박스 */}
+          {showMobileInput && dragSelection && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <div className="text-center mb-4">
+                  <div className="text-lg font-semibold text-gray-800 mb-2">📅 일정 추가</div>
+                </div>
+                
+                {/* 시간 설정 */}
+                <div className="mb-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">시간 설정</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">시작 시간</label>
+                      <select
+                        value={hours.find(h => fmtTime(h) === fmtTime(Math.min(dragSelection.start, dragSelection.end))) || Math.min(dragSelection.start, dragSelection.end)}
+                        onChange={(e) => {
+                          const newStart = parseFloat(e.target.value);
+                          const currentEnd = Math.max(dragSelection.start, dragSelection.end);
+                          setDragSelection(prev => ({
+                            ...prev,
+                            start: newStart,
+                            end: Math.max(newStart, currentEnd)
+                          }));
+                        }}
+                        className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {hours.map(h => (
+                          <option key={h} value={h}>{fmtTime(h)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">종료 시간</label>
+                      <select
+                        value={hours.find(h => fmtTime(h) === fmtTime(Math.max(dragSelection.start, dragSelection.end))) || Math.max(dragSelection.start, dragSelection.end)}
+                        onChange={(e) => {
+                          const newEnd = parseFloat(e.target.value);
+                          const currentStart = Math.min(dragSelection.start, dragSelection.end);
+                          setDragSelection(prev => ({
+                            ...prev,
+                            start: Math.min(currentStart, newEnd),
+                            end: newEnd
+                          }));
+                        }}
+                        className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {hours.map(h => (
+                          <option key={h} value={h}>{fmtTime(h)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500 text-center">
+                    현재 선택: {fmtTime(Math.min(dragSelection.start, dragSelection.end))} - {fmtTime(Math.max(dragSelection.start, dragSelection.end))}
+                  </div>
+                </div>
+
+                {/* 일정명 입력 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">일정명</label>
+                  <input
+                    type="text"
+                    placeholder="일정명을 입력하세요 (최대 10글자)"
+                    className="w-full text-lg py-4 px-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    maxLength={10}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const title = e.target.value.trim();
+                        if (title) {
+                          addEvent(
+                            activeParticipantId, 
+                            title, 
+                            dragSelection.day, 
+                            Math.min(dragSelection.start, dragSelection.end), 
+                            Math.max(dragSelection.start, dragSelection.end)
+                          );
+                          setShowMobileInput(false);
+                          setDragSelection(null);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setShowMobileInput(false);
+                        setDragSelection(null);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowMobileInput(false);
+                      setDragSelection(null);
+                    }}
+                    className="flex-1 py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={() => {
+                      const input = document.querySelector('input[placeholder*="일정명을 입력하세요"]');
+                      const title = input?.value.trim();
+                      if (title) {
+                        addEvent(
+                          activeParticipantId, 
+                          title, 
+                          dragSelection.day, 
+                          Math.min(dragSelection.start, dragSelection.end), 
+                          Math.max(dragSelection.start, dragSelection.end)
+                        );
+                      }
+                      setShowMobileInput(false);
+                      setDragSelection(null);
+                    }}
+                    className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 패널 */}
+          {mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />}
+        </>
+      ) : (
+        /* 사용자 일정 데모 탭 */
+        <div className="space-y-6">
+          {inviteData ? (
+            <>
+              {/* 초대 데이터를 기반으로 한 주간 캘린더 */}
+              <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b text-sm font-semibold bg-blue-50">
+                  📅 초대 메시지 결과 - {inviteData.meetingName}
+                </div>
+                <div className="grid grid-cols-8 bg-slate-50 border-b">
+                  <div className="p-3 text-xs text-slate-500">시간</div>
+                  {DAYS.map((d) => (
+                    <div key={d} className="p-3 text-center text-xs font-semibold text-slate-700 border-l">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-8">
+                  {/* 시간 라벨 열 */}
+                  <div className="border-r">
+                    {hours.map((h) => (
+                      <div key={h} className="h-16 border-b border-slate-100 text-xs text-slate-400 pl-1">
+                        {h}시
+                      </div>
+                    ))}
+                  </div>
+                  {/* 요일별 컬럼 */}
+                  {DAYS.map((_, dayIdx) => {
+                    // 초대 데이터의 일정들을 기반으로 이벤트 찾기
+                    const inviteEvents = [];
+                    inviteData.schedule.forEach(participant => {
+                      participant.events.forEach(event => {
+                        if (event.day === dayIdx) {
+                          inviteEvents.push({
+                            ...event,
+                            participantId: participant.id,
+                            participantName: participant.name,
+                            color: participant.color
+                          });
+                        }
+                      });
+                    });
+
+                    return (
+                      <div key={dayIdx} className="relative border-l border-slate-200">
+                        {hours.map((h) => (
+                          <div key={h} className="h-16 border-b border-slate-100 text-xs text-slate-400 pl-1">
+                            {h}시
+                          </div>
+                        ))}
+                        <div 
+                          className="absolute inset-0"
+                          onClick={() => { 
+                            setSelectedInviteEvent(null); 
+                            setInviteOverlapPicker(null); 
+                          }}
+                        >
+                          {inviteEvents.map((e) => {
+                            const top = ((e.start - START_HOUR) / (END_HOUR - START_HOUR)) * 100;
+                            const height = Math.max(2, ((e.end - START_HOUR) / (END_HOUR - START_HOUR)) * 100 - top);
+                            const overlappingEvents = inviteEvents.filter(other => 
+                              other.id !== e.id && 
+                              other.start < e.end && 
+                              other.end > e.start
+                            );
+                            
+                            return (
+                              <div
+                                key={e.id + e.participantId}
+                                data-event="true"
+                                className="absolute left-1 right-1 rounded-xl p-2 text-xs font-medium overflow-hidden cursor-pointer"
+                                style={{
+                                  top: `${top}%`,
+                                  height: `${height}%`,
+                                  backgroundColor: e.color,
+                                  opacity: e.mandatory ? 0.9 : 0.55,
+                                  mixBlendMode: "multiply",
+                                }}
+                                title={`${e.title} — ${e.participantName}`}
+                                onMouseDown={(ev) => {
+                                  ev.preventDefault();
+                                  ev.stopPropagation();
+                                  
+                                  if (overlappingEvents.length > 0) {
+                                    // 중복 일정이 있는 경우 사용자 선택 오버레이 표시
+                                    setInviteOverlapPicker({
+                                      day: dayIdx,
+                                      topPct: top,
+                                      items: [e, ...overlappingEvents].map(event => ({
+                                        participantId: event.participantId,
+                                        eventId: event.id,
+                                        title: event.title,
+                                        participantName: event.participantName,
+                                        mandatory: event.mandatory
+                                      }))
+                                    });
+                                  } else {
+                                    // 중복이 없는 경우 바로 선택
+                                    setSelectedInviteEvent({ 
+                                      participantId: e.participantId, 
+                                      eventId: e.id, 
+                                      day: dayIdx, 
+                                      start: e.start,
+                                      title: e.title,
+                                      participantName: e.participantName,
+                                      mandatory: e.mandatory
+                                    });
+                                  }
+                                }}
+                                onClick={(ev) => {
+                                  ev.stopPropagation();
+                                }}
+                              >
+                                <div className="truncate text-white drop-shadow-sm">
+                                  {e.title} <span className="opacity-90">· {e.participantName}</span>
+                                </div>
+                                <div className="text-[10px] text-white/90 mt-1">
+                                  {fmtTime(e.start)}–{fmtTime(e.end)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+
+              {/* 중복 일정 선택 오버레이 */}
+              {inviteOverlapPicker && (
+                <div 
+                  className={`absolute z-50 translate-y-[-6px] ${
+                    inviteOverlapPicker.day === 0 ? 'left-2' : 
+                    inviteOverlapPicker.day === 4 ? 'right-2' : 
+                    'left-1/2 transform -translate-x-1/2'
+                  }`} 
+                  style={{ top: `${inviteOverlapPicker.topPct}%` }} 
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <div className="bg-white border shadow-xl rounded-2xl p-2 w-56 max-w-[calc(100vw-2rem)]">
+                    <div className="px-2 py-1 text-xs text-slate-500">
+                      어떤 일정을 변경할까요?
+                    </div>
+                    <div className="max-h-48 overflow-auto mt-1 flex flex-col gap-1">
+                      {inviteOverlapPicker.items.map((item, index) => (
+                        <button
+                          key={item.eventId}
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
+                            setSelectedInviteEvent({
+                              participantId: item.participantId,
+                              eventId: item.eventId,
+                              day: inviteOverlapPicker.day,
+                              start: 0, // 실제 시간은 이벤트에서 가져와야 함
+                              title: item.title,
+                              participantName: item.participantName,
+                              mandatory: item.mandatory
+                            });
+                            setInviteOverlapPicker(null);
+                          }}
+                          className="text-left text-sm px-3 py-2 rounded-xl border hover:bg-slate-50"
+                        >
+                          {item.title} · <span className="text-slate-500">{item.participantName}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        onClick={() => setInviteOverlapPicker(null)}
+                        className="text-xs px-2 py-1 rounded-lg border hover:bg-slate-50"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 선택된 이벤트 팝업 */}
+              {selectedInviteEvent && (
+                <div 
+                  className={`absolute z-50 translate-y-[-6px] ${
+                    selectedInviteEvent.day === 0 ? 'left-2' : 
+                    selectedInviteEvent.day === 4 ? 'right-2' : 
+                    'left-1/2 transform -translate-x-1/2'
+                  }`}
+                  style={{ top: `${((selectedInviteEvent.start - START_HOUR) / (END_HOUR - START_HOUR)) * 100}%` }} 
+                  onMouseDown={(ev) => ev.stopPropagation()}
+                  onMouseUp={(ev) => ev.stopPropagation()}
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <div className="bg-white border shadow-xl rounded-2xl p-2 w-44 max-w-[calc(100vw-2rem)]">
+                    <div className="px-2 py-1 text-xs text-slate-500">
+                      {selectedInviteEvent.title} · {selectedInviteEvent.participantName}
+                    </div>
+                    <div className="flex flex-col gap-2 mt-1">
+                      <button
+                        onMouseDown={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                        }}
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                          // 필수 상태 토글
+                          setInviteData(prev => {
+                            if (!prev) return prev;
+                            return {
+                              ...prev,
+                              schedule: prev.schedule.map(participant => {
+                                if (participant.id === selectedInviteEvent.participantId) {
+                                  return {
+                                    ...participant,
+                                    events: participant.events.map(event => 
+                                      event.id === selectedInviteEvent.eventId 
+                                        ? { ...event, mandatory: !event.mandatory }
+                                        : event
+                                    )
+                                  };
+                                }
+                                return participant;
+                              })
+                            };
+                          });
+                          setSelectedInviteEvent(prev => ({ ...prev, mandatory: !prev.mandatory }));
+                        }}
+                        className="text-sm px-3 py-2 rounded-xl border hover:bg-slate-50 text-slate-700"
+                      >
+                        {selectedInviteEvent.mandatory ? '필수 해제' : '필수로 표시'}
+                      </button>
+                      <button
+                        onMouseDown={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                        }}
+                        onClick={(ev) => {
+                          ev.preventDefault();
+                          ev.stopPropagation();
+                          // 이벤트 삭제
+                          setInviteData(prev => {
+                            if (!prev) return prev;
+                            return {
+                              ...prev,
+                              schedule: prev.schedule.map(participant => {
+                                if (participant.id === selectedInviteEvent.participantId) {
+                                  return {
+                                    ...participant,
+                                    events: participant.events.filter(event => event.id !== selectedInviteEvent.eventId)
+                                  };
+                                }
+                                return participant;
+                              })
+                            };
+                          });
+                          setSelectedInviteEvent(null);
+                        }}
+                        className="text-sm px-3 py-2 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 닫기 버튼 */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setInviteData(null);
+                    setSelectedInviteEvent(null);
+                  }}
+                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-300 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+
+              {/* 패널 */}
+              {mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />}
+            </>
+          ) : (
+            <div className="rounded-2xl border bg-white shadow-sm p-8 text-center">
+              <div className="text-6xl mb-4">📅</div>
+              <h2 className="text-2xl font-bold text-slate-700 mb-2">사용자 일정 데모</h2>
+              <p className="text-slate-500 mb-6">초대 메시지에서 생성된 데이터가 여기에 표시됩니다.</p>
               <button
-                onClick={() => {
-                  setIsAddingEvent(!isAddingEvent);
-                  if (!isAddingEvent) {
-                    // 추가 모드로 전환할 때 터치 시작점 초기화
-                    setTouchStartPoint(null);
-                    setDragSelection(null);
-                    setShowMobileInput(false);
-                  }
-                }}
-                className={`px-4 py-2 rounded-xl font-medium transition-colors ${
-                  isAddingEvent 
-                    ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
+                onClick={openInviteWindow}
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
               >
-                {isAddingEvent ? '저장' : '추가'}
+                초대 메시지 작성하기
               </button>
             </div>
           )}
         </div>
-      </div>
-
-      {/* 주간 캘린더 */}
-      <WeekGrid />
-      
-      {/* 추가 모드 안내 */}
-      {mode === "participant" && isAddingEvent && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
-          <div className="text-blue-800 font-medium mb-2">📅 일정 추가 모드</div>
-          <div className="text-sm text-blue-600">
-            {hasTouchSupport ? (
-              <>
-                <div>1️⃣ 첫 번째 터치: 시작 시간</div>
-                <div>2️⃣ 두 번째 터치: 종료 시간</div>
-                <div className="text-xs text-blue-500 mt-1">다른 요일이나 이전 시간을 터치하면 새 시작점으로 설정됩니다</div>
-              </>
-            ) : (
-              "달력에서 원하는 시간대를 드래그하여 일정을 추가하세요"
-            )}
-          </div>
-        </div>
       )}
 
-      {/* 모바일 전용 입력 박스 */}
-      {showMobileInput && dragSelection && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <div className="text-center mb-4">
-              <div className="text-lg font-semibold text-gray-800 mb-2">📅 일정 추가</div>
-            </div>
-            
-            {/* 시간 설정 */}
-            <div className="mb-4">
-              <div className="text-sm font-medium text-gray-700 mb-2">시간 설정</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">시작 시간</label>
-                  <select
-                    value={hours.find(h => fmtTime(h) === fmtTime(Math.min(dragSelection.start, dragSelection.end))) || Math.min(dragSelection.start, dragSelection.end)}
-                    onChange={(e) => {
-                      const newStart = parseFloat(e.target.value);
-                      const currentEnd = Math.max(dragSelection.start, dragSelection.end);
-                      setDragSelection(prev => ({
-                        ...prev,
-                        start: newStart,
-                        end: Math.max(newStart, currentEnd)
-                      }));
-                    }}
-                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {hours.map(h => (
-                      <option key={h} value={h}>{fmtTime(h)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">종료 시간</label>
-                  <select
-                    value={hours.find(h => fmtTime(h) === fmtTime(Math.max(dragSelection.start, dragSelection.end))) || Math.max(dragSelection.start, dragSelection.end)}
-                    onChange={(e) => {
-                      const newEnd = parseFloat(e.target.value);
-                      const currentStart = Math.min(dragSelection.start, dragSelection.end);
-                      setDragSelection(prev => ({
-                        ...prev,
-                        start: Math.min(currentStart, newEnd),
-                        end: newEnd
-                      }));
-                    }}
-                    className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {hours.map(h => (
-                      <option key={h} value={h}>{fmtTime(h)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-gray-500 text-center">
-                현재 선택: {fmtTime(Math.min(dragSelection.start, dragSelection.end))} - {fmtTime(Math.max(dragSelection.start, dragSelection.end))}
-              </div>
-            </div>
-
-            {/* 일정명 입력 */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">일정명</label>
-              <input
-                type="text"
-                placeholder="일정명을 입력하세요 (최대 10글자)"
-                className="w-full text-lg py-4 px-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                maxLength={10}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const title = e.target.value.trim();
-                    if (title) {
-                      addEvent(
-                        activeParticipantId, 
-                        title, 
-                        dragSelection.day, 
-                        Math.min(dragSelection.start, dragSelection.end), 
-                        Math.max(dragSelection.start, dragSelection.end)
-                      );
-                      setShowMobileInput(false);
-                      setDragSelection(null);
-                    }
-                  } else if (e.key === 'Escape') {
-                    setShowMobileInput(false);
-                    setDragSelection(null);
-                  }
-                }}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowMobileInput(false);
-                  setDragSelection(null);
-                }}
-                className="flex-1 py-3 px-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  const input = document.querySelector('input[placeholder*="일정명을 입력하세요"]');
-                  const title = input?.value.trim();
-                  if (title) {
-                    addEvent(
-                      activeParticipantId, 
-                      title, 
-                      dragSelection.day, 
-                      Math.min(dragSelection.start, dragSelection.end), 
-                      Math.max(dragSelection.start, dragSelection.end)
-                    );
-                  }
-                  setShowMobileInput(false);
-                  setDragSelection(null);
-                }}
-                className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-              >
-                저장
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 패널 */}
-      {mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />}
 
       <div className="text-xs text-slate-500 pt-4">
         · 겹침 표현: 참여자 색상 + <code>opacity</code> + <code>mix-blend-multiply</code> 사용. 클릭 위치 기반 겹침 선택 팝업 제공.<br />
