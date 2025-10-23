@@ -1,0 +1,33 @@
+{
+  "name": "meeting-scheduler-mvp",
+  "version": "1.0.0",
+  "description": "모임 일정 조율 시스템 MVP",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
+    "tailwindcss": "^3.3.0",
+    "vite": "^4.4.0"
+  },
+  "keywords": [
+    "meeting",
+    "scheduler",
+    "calendar",
+    "react",
+    "mvp"
+  ],
+  "author": "Meeting Scheduler Team",
+  "license": "MIT"
+}

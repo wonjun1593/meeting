@@ -1,0 +1,377 @@
+/* 기본 스타일 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 헤더 스타일 */
+header {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+header h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    border: none;
+    background: #ecf0f1;
+    color: #2c3e50;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: #bdc3c7;
+}
+
+.nav-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+/* 페이지 스타일 */
+.page {
+    display: none;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.page.active {
+    display: block;
+}
+
+.page h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+/* 폼 스타일 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ecf0f1;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-range span {
+    font-weight: bold;
+    color: #7f8c8d;
+}
+
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+/* 주간 달력 스타일 */
+.calendar-container {
+    margin: 20px 0;
+}
+
+.week-calendar {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #bdc3c7;
+    border: 2px solid #bdc3c7;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.time-header {
+    background: #34495e;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.day-header {
+    background: #34495e;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.time-slot {
+    background: #ecf0f1;
+    padding: 8px;
+    text-align: center;
+    font-size: 12px;
+    border: 1px solid #bdc3c7;
+}
+
+.calendar-cell {
+    background: white;
+    min-height: 40px;
+    border: 1px solid #bdc3c7;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.calendar-cell:hover {
+    background: #f8f9fa;
+}
+
+.calendar-cell.selected {
+    background: #3498db;
+    color: white;
+}
+
+.schedule-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(52, 152, 219, 0.3);
+    border: 1px solid #3498db;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.schedule-item:hover {
+    background: rgba(52, 152, 219, 0.5);
+}
+
+.schedule-item.essential {
+    background: rgba(231, 76, 60, 0.3);
+    border-color: #e74c3c;
+}
+
+.schedule-item.essential:hover {
+    background: rgba(231, 76, 60, 0.5);
+}
+
+/* 일정 목록 스타일 */
+.schedule-list {
+    margin: 20px 0;
+}
+
+.schedule-list h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.schedule-item-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.schedule-item-card:hover {
+    background: #e9ecef;
+    border-color: #3498db;
+}
+
+.schedule-item-card.selected {
+    background: #3498db;
+    color: white;
+    border-color: #2980b9;
+}
+
+.schedule-item-card.essential {
+    background: #f8d7da;
+    border-color: #e74c3c;
+}
+
+.schedule-item-card.essential.selected {
+    background: #e74c3c;
+    color: white;
+}
+
+/* 종합보기 스타일 */
+.summary-controls {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.filter-controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.participant-selector {
+    margin-top: 15px;
+}
+
+.participant-selector select {
+    width: 100%;
+    min-height: 100px;
+}
+
+.summary-calendar {
+    margin: 20px 0;
+}
+
+.empty-slots {
+    margin-top: 30px;
+}
+
+.empty-slots h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.empty-slot-item {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 5px;
+    color: #155724;
+}
+
+/* 색상 겹침 스타일 */
+.schedule-overlap {
+    background: linear-gradient(45deg, rgba(52, 152, 219, 0.3), rgba(231, 76, 60, 0.3));
+    border: 2px solid #3498db;
+}
+
+.schedule-overlap.essential {
+    background: linear-gradient(45deg, rgba(231, 76, 60, 0.5), rgba(52, 152, 219, 0.3));
+    border-color: #e74c3c;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .week-calendar {
+        font-size: 10px;
+    }
+    
+    .time-slot {
+        padding: 5px;
+    }
+    
+    .calendar-cell {
+        min-height: 30px;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+    animation: fadeIn 0.3s ease;
+}
+
+/* 유틸리티 클래스 */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}

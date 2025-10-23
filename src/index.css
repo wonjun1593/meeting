@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 커스텀 스타일 */
+@layer base {
+  html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+}
+
+@layer components {
+  .schedule-item {
+    @apply absolute left-1 right-1 rounded-xl shadow-sm p-2 text-xs font-medium overflow-hidden;
+  }
+  
+  .schedule-item:hover {
+    @apply shadow-md;
+  }
+  
+  .free-slot {
+    @apply absolute left-0 right-0 bg-emerald-300/20 border border-emerald-300/40 rounded-xl;
+  }
+}
