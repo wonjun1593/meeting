@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
 import { Calendar, Clock, Users, MapPin } from 'lucide-react';
 
 // Agent 데이터를 기반으로 예시 일정 데이터 생성
@@ -9,7 +9,16 @@ function generateDemoData(agentData) {
   const title = agentData.title;
   
   // 각 참여자별 예시 일정 생성
-  const demoEvents = [];
+  const demoEvents: Array<{
+    id: string;
+    participant: string;
+    day: number;
+    start: number;
+    end: number;
+    title: string;
+    color: string;
+    mandatory: boolean;
+  }> = [];
   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
   
   participants.forEach((participant, index) => {

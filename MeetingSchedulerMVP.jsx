@@ -1181,6 +1181,11 @@ export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOn
           </div>
         </div>
 
+        {/* 참여자 선택 영역 */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <ParticipantLegend />
+        </div>
+
         {/* 전체 일정 리스트 + 무시 토글 */}
         <div className="rounded-2xl border bg-white shadow-sm">
           <div className="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
@@ -1216,11 +1221,6 @@ export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOn
             ))}
           </div>
           )}
-        </div>
-
-        {/* 참여자 선택 영역 */}
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <ParticipantLegend />
         </div>
       </div>
     );
@@ -1302,43 +1302,6 @@ export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOn
                 );
               })}
           </div>
-        </div>
-
-        {/* 전체 일정 리스트 + 무시 토글 */}
-        <div className="rounded-2xl border bg-white shadow-sm">
-          <div className="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
-            <span>전체 일정 (필터 반영)</span>
-            <button
-              onClick={() => setIsEventListExpanded(!isEventListExpanded)}
-              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              {isEventListExpanded ? '접기' : '펼치기'}
-              <span className="text-xs">{isEventListExpanded ? '▲' : '▼'}</span>
-            </button>
-          </div>
-          {isEventListExpanded && (
-          <div className="divide-y">
-            {visibleEvents.length === 0 && <div className="p-4 text-sm text-slate-500">표시할 일정이 없습니다.</div>}
-            {visibleEvents.map((e) => (
-              <div key={e.id + e.participantId} className="p-4 flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{e.title} — {e.participantName}</div>
-                  <div className="text-xs text-slate-500">{DAYS[e.day]} {fmtTime(e.start)}–{fmtTime(e.end)}</div>
-                </div>
-                  <button 
-                    onClick={(event) => {
-                      event.preventDefault();
-                      toggleIgnore(e.id);
-                    }} 
-                    className={"px-3 py-1 rounded-lg text-xs border " + (ignoredEventIds.has(e.id) ? "bg-slate-100 text-slate-500" : "bg-white hover:bg-slate-50")}
-                  >
-                    {ignoredEventIds.has(e.id) ? "무시 해제" : "일정 무시"}
-                  </button>
-              </div>
-            ))}
-          </div>
-          )}
         </div>
 
         {/* 참여자 선택 영역 */}
