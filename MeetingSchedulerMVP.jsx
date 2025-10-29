@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 
 /**
  * MeetingSchedulerMVP — 전체 기능 복원 + 겹침 선택 팝업 + 오버레이(필수/삭제)
@@ -6,7 +6,7 @@ import React, { useMemo, useState, useRef } from "react";
  *         기능(계산/리스트/필터)은 모두 유지합니다.
  */
 
-export default function MeetingSchedulerMVP() {
+export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOnCalendar, onCloseOrganizerTutorial }) {
   // ====== 상수 ======
   const DAYS = ["월", "화", "수", "목", "금"];
   const START_HOUR = 9;
@@ -56,30 +56,81 @@ export default function MeetingSchedulerMVP() {
     {
       id: "p1",
       name: "황원준",
+      email: "hwang.wonjun@company.com",
       color: palette[0],
       events: [
-        { id: "e1", day: 1, start: 9.0, end: 10.5, title: "주간 킥오프", mandatory: false },
-        { id: "e2", day: 2, start: 13.0, end: 14.0, title: "클라이언트 콜", mandatory: false },
-        { id: "e3", day: 4, start: 15.0, end: 16.5, title: "디자인 리뷰", mandatory: false },
+        { id: "e1", day: 1, start: 9.0, end: 10.5, title: "주간 킥오프", mandatory: true },
+        { id: "e2", day: 2, start: 13.0, end: 14.0, title: "클라이언트 콜", mandatory: true },
+        { id: "e3", day: 4, start: 15.0, end: 16.5, title: "디자인 리뷰", mandatory: true },
       ],
     },
     {
       id: "p2",
       name: "정유진",
+      email: "jung.yujin@company.com",
       color: palette[1],
       events: [
-        { id: "e4", day: 1, start: 10.0, end: 12.0, title: "세일즈 미팅", mandatory: false },
-        { id: "e5", day: 3, start: 9.5, end: 11.0, title: "콘텐츠 기획", mandatory: false },
-        { id: "e6", day: 4, start: 15.5, end: 17.0, title: "파트너 협의", mandatory: false },
+        { id: "e4", day: 1, start: 10.0, end: 12.0, title: "세일즈 미팅", mandatory: true },
+        { id: "e5", day: 3, start: 9.5, end: 11.0, title: "콘텐츠 기획", mandatory: true },
+        { id: "e6", day: 4, start: 15.5, end: 17.0, title: "파트너 협의", mandatory: true },
       ],
     },
     {
       id: "p3",
       name: "한지은",
+      email: "han.jieun@company.com",
       color: palette[2],
       events: [
-        { id: "e7", day: 2, start: 13.0, end: 15.0, title: "촬영 스케줄", mandatory: false },
-        { id: "e8", day: 3, start: 11.0, end: 12.5, title: "브랜드 미팅", mandatory: false },
+        { id: "e7", day: 2, start: 13.0, end: 15.0, title: "촬영 스케줄", mandatory: true },
+        { id: "e8", day: 3, start: 11.0, end: 12.5, title: "브랜드 미팅", mandatory: true },
+      ],
+    },
+  ];
+
+  // 3명 데모용 2주차 데이터
+  const secondWeekParticipants3 = [
+    {
+      id: "p1",
+      name: "황원준",
+      email: "hwang.wonjun@company.com",
+      color: palette[0],
+      events: [
+        { id: "e1_w2_3", day: 0, start: 9.0, end: 10.0, title: "주간 리뷰", mandatory: true },
+        { id: "e2_w2_3", day: 0, start: 14.0, end: 15.0, title: "프로젝트 검토", mandatory: true },
+        { id: "e3_w2_3", day: 1, start: 10.0, end: 11.0, title: "클라이언트 미팅", mandatory: true },
+        { id: "e4_w2_3", day: 2, start: 9.0, end: 10.0, title: "디자인 피드백", mandatory: true },
+        { id: "e5_w2_3", day: 3, start: 15.0, end: 16.0, title: "최종 검토", mandatory: true },
+        { id: "e6_w2_3", day: 4, start: 11.0, end: 12.0, title: "프레젠테이션 준비", mandatory: true },
+      ],
+    },
+    {
+      id: "p2",
+      name: "정유진",
+      email: "jung.yujin@company.com",
+      color: palette[1],
+      events: [
+        { id: "e7_w2_3", day: 0, start: 9.0, end: 10.0, title: "주간 리뷰", mandatory: true },
+        { id: "e8_w2_3", day: 0, start: 11.0, end: 12.0, title: "마케팅 전략", mandatory: true },
+        { id: "e9_w2_3", day: 1, start: 9.0, end: 10.0, title: "세일즈 분석", mandatory: true },
+        { id: "e10_w2_3", day: 1, start: 15.0, end: 16.0, title: "고객 상담", mandatory: true },
+        { id: "e11_w2_3", day: 2, start: 10.0, end: 11.0, title: "콘텐츠 기획", mandatory: true },
+        { id: "e12_w2_3", day: 3, start: 14.0, end: 15.0, title: "파트너 미팅", mandatory: true },
+        { id: "e13_w2_3", day: 4, start: 9.0, end: 10.0, title: "성과 분석", mandatory: true },
+      ],
+    },
+    {
+      id: "p3",
+      name: "한지은",
+      email: "han.jieun@company.com",
+      color: palette[2],
+      events: [
+        { id: "e14_w2_3", day: 0, start: 9.0, end: 10.0, title: "주간 리뷰", mandatory: true },
+        { id: "e15_w2_3", day: 0, start: 13.0, end: 14.0, title: "촬영 준비", mandatory: true },
+        { id: "e16_w2_3", day: 1, start: 11.0, end: 12.0, title: "브랜드 미팅", mandatory: true },
+        { id: "e17_w2_3", day: 2, start: 9.0, end: 10.0, title: "디자인 리뷰", mandatory: true },
+        { id: "e18_w2_3", day: 2, start: 14.0, end: 15.0, title: "포토샵 작업", mandatory: true },
+        { id: "e19_w2_3", day: 3, start: 10.0, end: 11.0, title: "영상 편집", mandatory: true },
+        { id: "e20_w2_3", day: 4, start: 13.0, end: 14.0, title: "최종 점검", mandatory: true },
       ],
     },
   ];
@@ -87,7 +138,7 @@ export default function MeetingSchedulerMVP() {
   // 10명 참여자 데이터 (월~금)
   const largeParticipants = [
     {
-      id: "p1", name: "김철수", color: "#3B82F6", mandatory: true,
+      id: "p1", name: "김철수", email: "kim.chulsoo@company.com", color: "#3B82F6", mandatory: true,
       events: [
         { id: "e1", day: 0, start: 9.0, end: 10.0, title: "팀 미팅", mandatory: true },
         { id: "e2", day: 0, start: 10.5, end: 11.5, title: "고객 상담", mandatory: false },
@@ -102,7 +153,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p2", name: "이영희", color: "#EF4444", mandatory: true,
+      id: "p2", name: "이영희", email: "lee.younghee@company.com", color: "#EF4444", mandatory: true,
       events: [
         { id: "e11", day: 0, start: 9.0, end: 10.0, title: "팀 미팅", mandatory: true },
         { id: "e12", day: 0, start: 10.5, end: 11.5, title: "디자인 리뷰", mandatory: false },
@@ -117,7 +168,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p3", name: "박민수", color: "#10B981", mandatory: true,
+      id: "p3", name: "박민수", email: "park.minsu@company.com", color: "#10B981", mandatory: true,
       events: [
         { id: "e21", day: 0, start: 9.0, end: 10.0, title: "팀 미팅", mandatory: true },
         { id: "e22", day: 0, start: 11.0, end: 12.0, title: "기술 세미나", mandatory: false },
@@ -132,7 +183,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p4", name: "정수진", color: "#F59E0B", mandatory: false,
+      id: "p4", name: "정수진", email: "jung.sujin@company.com", color: "#F59E0B", mandatory: false,
       events: [
         { id: "e31", day: 0, start: 10.0, end: 11.0, title: "고객 지원", mandatory: false },
         { id: "e32", day: 0, start: 11.5, end: 12.5, title: "품질 관리", mandatory: true },
@@ -147,7 +198,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p5", name: "최지훈", color: "#8B5CF6", mandatory: false,
+      id: "p5", name: "최지훈", email: "choi.jihun@company.com", color: "#8B5CF6", mandatory: false,
       events: [
         { id: "e41", day: 0, start: 9.5, end: 10.5, title: "보안 점검", mandatory: true },
         { id: "e42", day: 0, start: 11.0, end: 12.0, title: "인프라 관리", mandatory: false },
@@ -162,7 +213,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p6", name: "한소영", color: "#EC4899", mandatory: false,
+      id: "p6", name: "한소영", email: "han.soyoung@company.com", color: "#EC4899", mandatory: false,
       events: [
         { id: "e51", day: 0, start: 10.0, end: 11.0, title: "콘텐츠 기획", mandatory: false },
         { id: "e52", day: 0, start: 13.0, end: 14.0, title: "사용자 리서치", mandatory: true },
@@ -177,7 +228,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p7", name: "강동현", color: "#06B6D4", mandatory: false,
+      id: "p7", name: "강동현", email: "kang.donghyun@company.com", color: "#06B6D4", mandatory: false,
       events: [
         { id: "e61", day: 0, start: 9.0, end: 10.0, title: "데이터 수집", mandatory: false },
         { id: "e62", day: 0, start: 10.5, end: 11.5, title: "분석 모델링", mandatory: true },
@@ -192,7 +243,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p8", name: "윤서연", color: "#84CC16", mandatory: false,
+      id: "p8", name: "윤서연", email: "yoon.seoyeon@company.com", color: "#84CC16", mandatory: false,
       events: [
         { id: "e71", day: 0, start: 9.5, end: 10.5, title: "회계 정리", mandatory: false },
         { id: "e72", day: 0, start: 11.0, end: 12.0, title: "예산 계획", mandatory: true },
@@ -207,7 +258,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p9", name: "임태호", color: "#F97316", mandatory: false,
+      id: "p9", name: "임태호", email: "lim.taeho@company.com", color: "#F97316", mandatory: false,
       events: [
         { id: "e81", day: 0, start: 9.0, end: 10.0, title: "법무 검토", mandatory: false },
         { id: "e82", day: 0, start: 14.0, end: 15.0, title: "계약서 검토", mandatory: true },
@@ -222,7 +273,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p10", name: "송미래", color: "#6366F1", mandatory: false,
+      id: "p10", name: "송미래", email: "song.mirae@company.com", color: "#6366F1", mandatory: false,
       events: [
         { id: "e91", day: 0, start: 9.0, end: 10.0, title: "HR 정책", mandatory: false },
         { id: "e92", day: 0, start: 12.0, end: 13.0, title: "채용 면접", mandatory: true },
@@ -241,7 +292,7 @@ export default function MeetingSchedulerMVP() {
   // 두 번째 주 데이터 (시간대 분산 + 겹치는 일정)
   const secondWeekParticipants = [
     {
-      id: "p1", name: "김철수", color: "#3B82F6", mandatory: true,
+      id: "p1", name: "김철수", email: "kim.chulsoo@company.com", color: "#3B82F6", mandatory: true,
       events: [
         { id: "e1_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
         { id: "e2_w2", day: 0, start: 10.0, end: 11.0, title: "프로젝트 마무리", mandatory: false },
@@ -255,7 +306,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p2", name: "이영희", color: "#EF4444", mandatory: true,
+      id: "p2", name: "이영희", email: "lee.younghee@company.com", color: "#EF4444", mandatory: true,
       events: [
         { id: "e10_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
         { id: "e11_w2", day: 0, start: 10.5, end: 11.5, title: "디자인 최종", mandatory: false },
@@ -269,7 +320,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p3", name: "박민수", color: "#10B981", mandatory: true,
+      id: "p3", name: "박민수", email: "park.minsu@company.com", color: "#10B981", mandatory: true,
       events: [
         { id: "e19_w2", day: 0, start: 9.0, end: 9.5, title: "주간 리뷰", mandatory: true },
         { id: "e20_w2", day: 0, start: 11.0, end: 12.0, title: "코드 최적화", mandatory: false },
@@ -283,7 +334,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p4", name: "정수진", color: "#F59E0B", mandatory: false,
+      id: "p4", name: "정수진", email: "jung.sujin@company.com", color: "#F59E0B", mandatory: false,
       events: [
         { id: "e28_w2", day: 0, start: 10.0, end: 11.0, title: "테스트 완료", mandatory: false },
         { id: "e29_w2", day: 0, start: 15.0, end: 16.0, title: "품질 보고", mandatory: true },
@@ -296,7 +347,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p5", name: "최지훈", color: "#8B5CF6", mandatory: false,
+      id: "p5", name: "최지훈", email: "choi.jihun@company.com", color: "#8B5CF6", mandatory: false,
       events: [
         { id: "e36_w2", day: 0, start: 9.5, end: 10.5, title: "보안 점검", mandatory: true },
         { id: "e37_w2", day: 0, start: 11.5, end: 12.5, title: "시스템 안정화", mandatory: false },
@@ -309,7 +360,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p6", name: "한소영", color: "#EC4899", mandatory: false,
+      id: "p6", name: "한소영", email: "han.soyoung@company.com", color: "#EC4899", mandatory: false,
       events: [
         { id: "e44_w2", day: 0, start: 9.0, end: 10.0, title: "사용자 피드백", mandatory: true },
         { id: "e45_w2", day: 0, start: 15.0, end: 16.0, title: "개선사항 정리", mandatory: false },
@@ -322,7 +373,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p7", name: "강동현", color: "#06B6D4", mandatory: false,
+      id: "p7", name: "강동현", email: "kang.donghyun@company.com", color: "#06B6D4", mandatory: false,
       events: [
         { id: "e52_w2", day: 0, start: 9.5, end: 10.5, title: "데이터 분석 완료", mandatory: true },
         { id: "e53_w2", day: 0, start: 11.0, end: 12.0, title: "인사이트 정리", mandatory: false },
@@ -335,7 +386,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p8", name: "윤서연", color: "#84CC16", mandatory: false,
+      id: "p8", name: "윤서연", email: "yoon.seoyeon@company.com", color: "#84CC16", mandatory: false,
       events: [
         { id: "e60_w2", day: 0, start: 9.0, end: 10.0, title: "재무 정리", mandatory: true },
         { id: "e61_w2", day: 0, start: 14.5, end: 15.5, title: "예산 마무리", mandatory: false },
@@ -348,7 +399,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p9", name: "임태호", color: "#F97316", mandatory: false,
+      id: "p9", name: "임태호", email: "lim.taeho@company.com", color: "#F97316", mandatory: false,
       events: [
         { id: "e68_w2", day: 0, start: 9.0, end: 10.0, title: "법무 검토 완료", mandatory: true },
         { id: "e69_w2", day: 0, start: 11.0, end: 12.0, title: "계약 마무리", mandatory: false },
@@ -361,7 +412,7 @@ export default function MeetingSchedulerMVP() {
       ],
     },
     {
-      id: "p10", name: "송미래", color: "#6366F1", mandatory: false,
+      id: "p10", name: "송미래", email: "song.mirae@company.com", color: "#6366F1", mandatory: false,
       events: [
         { id: "e76_w2", day: 0, start: 9.5, end: 10.5, title: "HR 정리", mandatory: true },
         { id: "e77_w2", day: 0, start: 14.0, end: 15.0, title: "평가 완료", mandatory: false },
@@ -376,26 +427,107 @@ export default function MeetingSchedulerMVP() {
   ];
 
   // ====== 상태 ======
-  const [demoMode, setDemoMode] = useState("small"); // small | large - 데모 모드
+  const [demoMode, setDemoMode] = useState("small"); // small | large | user - 데모 모드
   const [currentWeek, setCurrentWeek] = useState(0); // 0: 첫 번째 주, 1: 두 번째 주
-  const [inviteData, setInviteData] = useState(null); // 초대 메시지에서 생성된 데이터
-  const [activeTab, setActiveTab] = useState("calendar"); // calendar | invite - 활성 탭
-  const [selectedInviteEvent, setSelectedInviteEvent] = useState(null); // 초대 데이터에서 선택된 이벤트
-  const [inviteOverlapPicker, setInviteOverlapPicker] = useState(null); // 초대 데이터에서 중복 일정 선택
   
-  // 데모 모드와 주간에 따른 참여자 데이터 선택
-  const getParticipantsForWeek = (demoMode, week) => {
-    if (demoMode === "large") {
-      return week === 0 ? largeParticipants : secondWeekParticipants;
+  // 각 데모 모드와 주차별로 데이터를 캐시
+  const [cachedParticipants, setCachedParticipants] = useState({
+    small: { 0: null, 1: null },
+    large: { 0: null, 1: null },
+    user: { 0: null, 1: null }
+  });
+  
+  // 사용자 데모용 랜덤 일정 생성 함수
+  const generateRandomEventsForUser = (name, index) => {
+    const eventTitles = [
+      "팀 미팅", "프로젝트 검토", "클라이언트 상담", "디자인 리뷰", 
+      "코드 리뷰", "브레인스토밍", "보고서 작성", "데이터 분석",
+      "사용자 테스트", "마케팅 회의", "세일즈 미팅", "HR 미팅"
+    ];
+    
+    const events = [];
+    const numEvents = Math.floor(Math.random() * 4) + 2; // 2-5개 일정
+    
+    for (let i = 0; i < numEvents; i++) {
+      const day = Math.floor(Math.random() * 5); // 월-금
+      const startHour = 9 + Math.floor(Math.random() * 8); // 9-16시
+      const duration = 1 + Math.random() * 2; // 1-3시간 (최소 1시간)
+      const endHour = Math.min(startHour + duration, 18);
+      
+      events.push({
+        id: `user_event_${index}_${i}`,
+        day: day,
+        start: Math.floor(startHour * 2) / 2, // 0.5 단위로 정수화
+        end: Math.floor(endHour * 2) / 2, // 0.5 단위로 정수화
+        title: eventTitles[Math.floor(Math.random() * eventTitles.length)],
+        mandatory: Math.random() > 0.4 // 60% 확률로 필수 일정
+      });
     }
-    return initialParticipants; // 3명 데모는 주간 구분 없음
+    
+    return events;
+  };
+  
+  // 데모 모드와 주간에 따른 참여자 데이터 선택 (캐시 사용)
+  const getParticipantsForWeek = (demoMode, week) => {
+    // 캐시된 데이터가 있으면 사용
+    if (cachedParticipants[demoMode][week]) {
+      return cachedParticipants[demoMode][week];
+    }
+    
+    let participants;
+    if (demoMode === "large") {
+      participants = week === 0 ? largeParticipants : secondWeekParticipants;
+    } else if (demoMode === "small") {
+      participants = week === 0 ? initialParticipants : secondWeekParticipants3;
+    } else if (demoMode === "user") {
+      // 사용자 데모 모드에서는 Agent 데이터를 기반으로 참여자 생성
+      if (agentData && agentData.participants) {
+        participants = agentData.participants.map((name, index) => ({
+          id: `user_${index}`,
+          name: name,
+          email: `${name.toLowerCase().replace(/\s+/g, '.')}@company.com`,
+          color: palette[index % palette.length],
+          events: generateRandomEventsForUser(name, index)
+        }));
+      } else {
+        participants = [];
+      }
+    } else {
+      participants = initialParticipants; // 기본값
+    }
+    
+    // 캐시에 저장
+    setCachedParticipants(prev => ({
+      ...prev,
+      [demoMode]: {
+        ...prev[demoMode],
+        [week]: participants
+      }
+    }));
+    
+    return participants;
   };
   
   const currentParticipants = getParticipantsForWeek(demoMode, currentWeek);
   const [participants, setParticipants] = useState(currentParticipants);
+  
+  // 사용자 데모 모드일 때 모든 참여자를 필수로 포함
+  useEffect(() => {
+    if (demoMode === "user" && agentData && agentData.participants) {
+      const allParticipantIds = participants.map(p => p.id);
+      setSelectedRequiredParticipantIds(new Set(allParticipantIds));
+    }
+  }, [demoMode, agentData, participants]);
+
+  // agentData가 있을 때 사용자 데모 탭으로 자동 전환
+  useEffect(() => {
+    if (agentData && agentData.participants && agentData.participants.length > 0) {
+      setDemoMode("user");
+    }
+  }, [agentData]);
   const [mode, setMode] = useState("organizer"); // organizer | participant
   const [activeParticipantId, setActiveParticipantId] = useState("p1");
-  const [considerOnlyMandatory, setConsiderOnlyMandatory] = useState(false);
+  const [considerOnlyMandatory, setConsiderOnlyMandatory] = useState(true);
   const [ignoredEventIds, setIgnoredEventIds] = useState(new Set());
   const [selectedRequiredParticipantIds, setSelectedRequiredParticipantIds] = useState(new Set(["p1", "p2", "p3"]));
   const [selectedEvent, setSelectedEvent] = useState(null); // {participantId,eventId,day,start}
@@ -404,7 +536,18 @@ export default function MeetingSchedulerMVP() {
   const [dragSelection, setDragSelection] = useState(null); // {day, start, end}
   const [touchStartPoint, setTouchStartPoint] = useState(null); // {day, time} - 모바일 터치 시작점
   const [showMobileInput, setShowMobileInput] = useState(false); // 모바일 전용 입력 박스 표시
-  
+  const [isEventListExpanded, setIsEventListExpanded] = useState(false); // 전체 일정 리스트 펼침/접힘 상태
+  const [showParticipantPopup, setShowParticipantPopup] = useState(false); // 참여자 탭 클릭 시 팝업 표시
+  const [showMobileTutorial, setShowMobileTutorial] = useState(false); // 모바일 일정 추가 튜토리얼 표시
+  const [showOrganizerTutorial, setShowOrganizerTutorial] = useState(false); // 모임장 탭 튜토리얼 표시
+  const [showParticipantTutorial, setShowParticipantTutorial] = useState(false); // 참여자 탭 튜토리얼 표시
+
+  // App.jsx에서 전달받은 모임장 튜토리얼 표시 상태를 동기화
+  useEffect(() => {
+    if (showOrganizerTutorialOnCalendar) {
+      setShowOrganizerTutorial(true);
+    }
+  }, [showOrganizerTutorialOnCalendar]);
 
   // ====== 유틸 ======
   const hours = useMemo(() => {
@@ -416,7 +559,7 @@ export default function MeetingSchedulerMVP() {
   // 터치 지원 감지 (이벤트 핸들러에서만 사용)
   const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   
-  // 데모 모드와 주간에 따른 참여자 데이터 및 필수 참여자 초기화
+  // 데모 모드와 주간에 따른 참여자 데이터 및 필수 참여자 초기화 (캐시 사용)
   React.useEffect(() => {
     const newParticipants = getParticipantsForWeek(demoMode, currentWeek);
     setParticipants(newParticipants);
@@ -429,10 +572,14 @@ export default function MeetingSchedulerMVP() {
     
     if (demoMode === "large") {
       setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"]));
-    } else {
+    } else if (demoMode === "small") {
       setSelectedRequiredParticipantIds(new Set(["p1", "p2", "p3"]));
+    } else if (demoMode === "user") {
+      // 사용자 데모 모드일 때 모든 참여자를 필수로 포함
+      const allParticipantIds = newParticipants.map(p => p.id);
+      setSelectedRequiredParticipantIds(new Set(allParticipantIds));
     }
-  }, [demoMode, currentWeek]);
+  }, [demoMode, currentWeek, agentData]); // agentData도 의존성에 추가
 
   // 일정 추가 모드에서 스크롤 방지
   React.useEffect(() => {
@@ -470,7 +617,6 @@ export default function MeetingSchedulerMVP() {
       document.addEventListener('touchmove', preventTouch, { passive: false, capture: true });
       document.addEventListener('scroll', preventScroll, { passive: false, capture: true });
       document.addEventListener('keydown', (e) => {
-        // 스크롤 관련 키 방지
         if ([32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
           e.preventDefault();
           e.stopPropagation();
@@ -478,7 +624,6 @@ export default function MeetingSchedulerMVP() {
       }, { passive: false });
 
       return () => {
-        // 정리 함수
         document.body.style.overflow = '';
         document.body.style.position = '';
         document.body.style.width = '';
@@ -502,11 +647,13 @@ export default function MeetingSchedulerMVP() {
   function fmtTime(t) {
     const h = Math.floor(t);
     const m = Math.round((t - h) * 60);
-    return `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
   function fmtHour(h) {
-    return `${h}시`;
+    const hour = Math.floor(h);
+    const minute = h % 1 === 0.5 ? 30 : 0;
+    return `${hour}시${minute === 30 ? ' 30분' : ''}`;
   }
 
   // ====== 조작 ======
@@ -591,359 +738,6 @@ export default function MeetingSchedulerMVP() {
   }
 
   // ====== 초대 메시지 작성 관련 함수들 ======
-  function openInviteWindow() {
-    const newWindow = window.open(
-      '',
-      'inviteMessage',
-      'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no'
-    );
-    
-    if (newWindow) {
-      // 메인 페이지에서 데이터를 받을 수 있도록 전역 함수 등록
-      window.receiveInviteData = (data) => {
-        setInviteData(data);
-        console.log('초대 데이터 수신:', data);
-      };
-      newWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="ko">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>초대 메시지 작성</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="bg-gray-50 p-6">
-          <div class="max-w-4xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-              <h1 class="text-2xl font-bold text-gray-900 mb-6">초대 메시지 작성</h1>
-              
-              <div class="space-y-6">
-                <!-- 일정명 입력 -->
-                <div class="rounded-2xl border bg-white shadow-sm p-6">
-                  <div class="mb-4">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">일정명</label>
-                    <input
-                      type="text"
-                      id="meetingName"
-                      placeholder="일정명을 입력하세요"
-                      class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <!-- 참여자 검색 및 선택 -->
-                <div class="rounded-2xl border bg-white shadow-sm p-6">
-                  <div class="mb-4">
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">참여자 검색</label>
-                    <div class="relative">
-                      <input
-                        type="text"
-                        id="searchQuery"
-                        placeholder="팀이름 또는 사람이름을 입력하세요"
-                        class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- 선택된 참여자 리스트 -->
-                  <div id="selectedParticipants" class="mt-4" style="display: none;">
-                    <div class="text-sm font-semibold text-slate-700 mb-3">선택된 참여자</div>
-                    <div id="participantList" class="flex flex-wrap gap-2"></div>
-                  </div>
-                </div>
-
-                <!-- 전송 버튼 -->
-                <div class="flex justify-center">
-                  <button
-                    id="generateSchedule"
-                    class="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-                    disabled
-                  >
-                    일정표 생성 및 전송
-                  </button>
-                </div>
-
-                <!-- 생성된 일정표 표시 -->
-                <div id="generatedSchedule" class="rounded-2xl border bg-white shadow-sm" style="display: none;">
-                  <div class="px-4 py-3 border-b text-sm font-semibold">
-                    생성된 일정표
-                  </div>
-                  <div class="p-4">
-                    <div class="text-sm text-slate-600 mb-4">
-                      선택된 참여자들의 일정표가 생성되었습니다.
-                    </div>
-                    <div id="scheduleContent" class="grid gap-3"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <script>
-            // 팀 및 개인 데이터
-            const teams = [
-              { id: "team1", name: "개발팀", members: ["김철수", "박민수", "정수진", "최지훈"] },
-              { id: "team2", name: "디자인팀", members: ["이영희", "한소영"] },
-              { id: "team3", name: "마케팅팀", members: ["강동현", "윤서연"] },
-              { id: "team4", name: "경영팀", members: ["임태호", "송미래"] }
-            ];
-
-            const allPeople = [
-              "김철수", "이영희", "박민수", "정수진", "최지훈", 
-              "한소영", "강동현", "윤서연", "임태호", "송미래",
-              "황원준", "정유진", "한지은"
-            ];
-
-            const palette = ["#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"];
-            const DAYS = ["월", "화", "수", "목", "금"];
-            const START_HOUR = 9;
-            const END_HOUR = 19;
-
-            let selectedParticipants = [];
-
-            function fmtTime(t) {
-              const h = Math.floor(t);
-              const m = Math.round((t - h) * 60);
-              return \`\${String(h).padStart(2, "0")}:\${m === 0 ? "00" : "30"}\`;
-            }
-
-            function getAutocompleteResults(query) {
-              if (!query.trim()) return [];
-              
-              const results = [];
-              
-              // 팀 검색
-              teams.forEach(team => {
-                if (team.name.includes(query)) {
-                  results.push({
-                    type: 'team',
-                    id: team.id,
-                    name: team.name,
-                    members: team.members
-                  });
-                }
-              });
-              
-              // 개인 검색
-              allPeople.forEach(person => {
-                if (person.includes(query)) {
-                  results.push({
-                    type: 'person',
-                    id: person,
-                    name: person,
-                    members: [person]
-                  });
-                }
-              });
-              
-              return results.slice(0, 5);
-            }
-
-            function addParticipant(item) {
-              const newParticipant = {
-                id: item.id,
-                name: item.name,
-                type: item.type,
-                members: item.members,
-                mandatory: false
-              };
-              
-              selectedParticipants.push(newParticipant);
-              document.getElementById('searchQuery').value = '';
-              updateParticipantList();
-              updateGenerateButton();
-            }
-
-            function removeParticipant(id) {
-              selectedParticipants = selectedParticipants.filter(p => p.id !== id);
-              updateParticipantList();
-              updateGenerateButton();
-            }
-
-            function toggleParticipantMandatory(id) {
-              const participant = selectedParticipants.find(p => p.id === id);
-              if (participant) {
-                participant.mandatory = !participant.mandatory;
-                updateParticipantList();
-              }
-            }
-
-            function updateParticipantList() {
-              const container = document.getElementById('selectedParticipants');
-              const list = document.getElementById('participantList');
-              
-              if (selectedParticipants.length === 0) {
-                container.style.display = 'none';
-                return;
-              }
-              
-              container.style.display = 'block';
-              list.innerHTML = selectedParticipants.map(participant => \`
-                <div class="relative bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 pr-8">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full \${participant.type === 'team' ? 'bg-blue-500' : 'bg-green-500'}"></span>
-                    <span class="font-medium text-blue-800">\${participant.name}</span>
-                    \${participant.mandatory ? '<span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">필수</span>' : ''}
-                  </div>
-                  
-                  <button
-                    onclick="removeParticipant('\${participant.id}')"
-                    class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full"
-                  >
-                    ×
-                  </button>
-                  
-                  <button
-                    onclick="toggleParticipantMandatory('\${participant.id}')"
-                    class="absolute top-1 left-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-full"
-                    title="\${participant.mandatory ? '필수 해제' : '필수로 설정'}"
-                  >
-                    \${participant.mandatory ? '★' : '☆'}
-                  </button>
-                </div>
-              \`).join('');
-            }
-
-            function updateGenerateButton() {
-              const meetingName = document.getElementById('meetingName').value.trim();
-              const button = document.getElementById('generateSchedule');
-              button.disabled = selectedParticipants.length === 0 || !meetingName;
-            }
-
-            function generateRandomSchedule() {
-              if (selectedParticipants.length === 0) return;
-              
-              // 선택된 참여자들의 모든 멤버 수집
-              const allMembers = [];
-              selectedParticipants.forEach(participant => {
-                participant.members.forEach(member => {
-                  if (!allMembers.includes(member)) {
-                    allMembers.push(member);
-                  }
-                });
-              });
-              
-              // 무작위 일정 데이터 생성 (총 40개)
-              const randomEvents = [];
-              const eventTitles = [
-                "팀 미팅", "프로젝트 검토", "클라이언트 상담", "기술 세미나", 
-                "디자인 리뷰", "코드 리뷰", "사용자 테스트", "보고서 작성",
-                "브레인스토밍", "성과 평가", "교육 세션", "네트워킹",
-                "제품 기획", "마케팅 전략", "품질 관리", "고객 지원",
-                "연구 개발", "운영 회의", "재무 검토", "인사 관리"
-              ];
-              
-              // 총 40개의 이벤트 생성
-              const totalEvents = 40;
-              const eventsPerMember = Math.floor(totalEvents / allMembers.length);
-              const remainingEvents = totalEvents % allMembers.length;
-              
-              allMembers.forEach((member, index) => {
-                const memberEvents = [];
-                const eventCount = eventsPerMember + (index < remainingEvents ? 1 : 0);
-                
-                for (let i = 0; i < eventCount; i++) {
-                  const day = Math.floor(Math.random() * 5);
-                  const start = START_HOUR + Math.random() * (END_HOUR - START_HOUR - 1);
-                  const end = start + 1 + Math.random() * 3; // 최소 1시간, 최대 4시간
-                  
-                  memberEvents.push({
-                    id: \`e_\${member}_\${i}\`,
-                    day,
-                    start: Math.round(start * 2) / 2,
-                    end: Math.round(end * 2) / 2,
-                    title: eventTitles[Math.floor(Math.random() * eventTitles.length)],
-                    mandatory: Math.random() > 0.5
-                  });
-                }
-                
-                randomEvents.push({
-                  id: \`p_\${member}\`,
-                  name: member,
-                  color: palette[index % palette.length],
-                  events: memberEvents
-                });
-              });
-              
-              displayGeneratedSchedule(randomEvents);
-            }
-
-            function displayGeneratedSchedule(schedule) {
-              const container = document.getElementById('generatedSchedule');
-              const content = document.getElementById('scheduleContent');
-              const meetingName = document.getElementById('meetingName').value;
-              
-              document.querySelector('#generatedSchedule .px-4.py-3').textContent = \`생성된 일정표 - \${meetingName}\`;
-              
-              content.innerHTML = schedule.map(participant => \`
-                <div class="border rounded-xl p-3 bg-slate-50">
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: \${participant.color}"></span>
-                    <span class="font-medium">\${participant.name}</span>
-                  </div>
-                  <div class="grid gap-1">
-                    \${participant.events.map(event => \`
-                      <div class="text-sm text-slate-600">
-                        \${DAYS[event.day]} \${fmtTime(event.start)}-\${fmtTime(event.end)}: \${event.title}
-                        \${event.mandatory ? '<span class="text-red-600 ml-2">(필수)</span>' : ''}
-                      </div>
-                    \`).join('')}
-                  </div>
-                </div>
-              \`).join('');
-              
-              container.style.display = 'block';
-              
-              // 메인 페이지로 데이터 전송
-              if (window.opener && window.opener.receiveInviteData) {
-                const inviteData = {
-                  meetingName: meetingName,
-                  participants: selectedParticipants,
-                  schedule: schedule,
-                  timestamp: new Date().toISOString()
-                };
-                window.opener.receiveInviteData(inviteData);
-                
-                // 전송 완료 메시지
-                alert('초대 메시지가 전송되었습니다! 메인 페이지에서 일정표를 확인하세요.');
-              }
-            }
-
-            // 이벤트 리스너
-            document.getElementById('meetingName').addEventListener('input', updateGenerateButton);
-            document.getElementById('searchQuery').addEventListener('input', function(e) {
-              const query = e.target.value;
-              if (query.length > 0) {
-                const results = getAutocompleteResults(query);
-                if (results.length > 0) {
-                  // 간단한 자동완성 (실제로는 더 복잡한 UI가 필요)
-                  console.log('검색 결과:', results);
-                }
-              }
-            });
-            document.getElementById('generateSchedule').addEventListener('click', generateRandomSchedule);
-
-            // Enter 키로 검색
-            document.getElementById('searchQuery').addEventListener('keydown', function(e) {
-              if (e.key === 'Enter') {
-                const query = e.target.value.trim();
-                if (query) {
-                  const results = getAutocompleteResults(query);
-                  if (results.length > 0) {
-                    addParticipant(results[0]);
-                  }
-                }
-              }
-            });
-          </script>
-        </body>
-        </html>
-      `);
-      newWindow.document.close();
-    }
-  }
-
 
   // 화면에 표시할 이벤트 집합(필터 적용)
   const visibleEvents = useMemo(() => {
@@ -976,6 +770,47 @@ export default function MeetingSchedulerMVP() {
   const freeSlotsByDay = useMemo(() => {
     const selectedP = participants.filter((p) => selectedRequiredParticipantIds.has(p.id));
     const slots = {};
+    
+    // 태그 생성 함수
+    const generateTags = (startTime, endTime, dayIndex, busyTimes) => {
+      const tags = [];
+      
+      // 1. 퇴근시간 임박 태그 (#퇴근시간 임박)
+      if (endTime >= 18) {
+        tags.push({ text: "#퇴근시간 임박", color: "bg-red-100 text-red-700" });
+      }
+      
+      // 2. 점심시간 포함 태그 (#점심시간 포함)
+      const lunchStart = 12;
+      const lunchEnd = 13;
+      const slotDuration = endTime - startTime;
+      const lunchOverlapStart = Math.max(startTime, lunchStart);
+      const lunchOverlapEnd = Math.min(endTime, lunchEnd);
+      const lunchOverlapDuration = Math.max(0, lunchOverlapEnd - lunchOverlapStart);
+      
+      if (lunchOverlapDuration > 0 && lunchOverlapDuration >= slotDuration * 0.5) {
+        tags.push({ text: "#점심시간 포함", color: "bg-yellow-100 text-yellow-700" });
+      }
+      
+      // 3. 이전미팅 있음 태그 (#이전미팅 있음)
+      const hasPreviousMeeting = busyTimes.some(([busyStart, busyEnd]) => 
+        busyEnd <= startTime && busyEnd > startTime - 1 // 1시간 이내에 끝나는 미팅
+      );
+      if (hasPreviousMeeting) {
+        tags.push({ text: "#이전미팅 있음", color: "bg-blue-100 text-blue-700" });
+      }
+      
+      // 4. 이후미팅 있음 태그 (#이후미팅 있음)
+      const hasNextMeeting = busyTimes.some(([busyStart, busyEnd]) => 
+        busyStart >= endTime && busyStart < endTime + 1 // 1시간 이내에 시작하는 미팅
+      );
+      if (hasNextMeeting) {
+        tags.push({ text: "#이후미팅 있음", color: "bg-purple-100 text-purple-700" });
+      }
+      
+      return tags;
+    };
+    
     for (let d = 0; d < 5; d++) {
       const busy = [];
       for (const p of selectedP) {
@@ -995,33 +830,122 @@ export default function MeetingSchedulerMVP() {
       const dayFree = [];
       let cur = START_HOUR;
       for (const [s, e] of merged) {
-        if (s > cur) dayFree.push([cur, s]);
+        if (s > cur) {
+          const tags = generateTags(cur, s, d, merged);
+          dayFree.push([cur, s, tags]);
+        }
         cur = Math.max(cur, e);
       }
-      if (cur < END_HOUR) dayFree.push([cur, END_HOUR]);
+      if (cur < END_HOUR) {
+        const tags = generateTags(cur, END_HOUR, d, merged);
+        dayFree.push([cur, END_HOUR, tags]);
+      }
       slots[d] = dayFree;
     }
     return slots;
   }, [participants, selectedRequiredParticipantIds, considerOnlyMandatory, ignoredEventIds]);
 
-  // ====== 보조 컴포넌트 ======
+  // ====== 미팅 정보 팝업 상태 ======
+  const [meetingPopup, setMeetingPopup] = useState(null); // { dayIndex, startTime, endTime, minStart, maxEnd }
+
+  // ====== 미팅 정보 팝업 생성 ======
+  const createMeetingPopup = (startTime, endTime, dayIndex) => {
+    setMeetingPopup({
+      dayIndex,
+      startTime,
+      endTime,
+      minStart: startTime,
+      maxEnd: endTime
+    });
+  };
+
+  // ====== 미팅 전송 완료 ======
+  const sendMeeting = () => {
+    alert('전송이 완료되었습니다');
+    setMeetingPopup(null);
+  };
+
+  // ====== 시간 포맷팅 함수들 ======
+  const formatTimeForInput = (time) => {
+    const hours = Math.floor(time);
+    const minutes = Math.round((time - hours) * 60);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  const parseTimeFromInput = (timeString) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return hours + minutes / 60;
+  };
+
+  // ====== 시간 옵션 생성 함수 ======
+  const generateTimeOptions = (minTime, maxTime, intervalMinutes = 30) => {
+    const options = [];
+    const startHour = Math.floor(minTime);
+    const endHour = Math.ceil(maxTime);
+    
+    for (let hour = startHour; hour <= endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += intervalMinutes) {
+        const timeValue = hour + minute / 60;
+        
+        // 선택된 구간 내의 시간만 포함 (경계값 포함)
+        if (timeValue >= minTime && timeValue <= maxTime) {
+          options.push({
+            value: formatTimeForInput(timeValue),
+            label: formatTimeForInput(timeValue),
+            timeValue: timeValue
+          });
+        }
+      }
+    }
+    
+    return options;
+  };
+
   function ParticipantLegend() {
+    // 필터링 제거됨 - 모든 참여자 표시
+
+    const total = participants.length;
+    const selectedCount = selectedRequiredParticipantIds.size;
+
+    // 사용하지 않는 함수들 제거됨
+
     return (
+      <div className="space-y-3">
+        {/* 컨트롤 바 제거됨 */}
+
+        {/* 참여자 칩 목록 */}
       <div className="flex flex-wrap gap-3">
-        {participants.map((p) => (
-          <div key={p.id} className="flex items-center gap-2 rounded-2xl px-3 py-2 bg-white shadow-sm border">
+          {participants.map((p) => {
+            const selected = selectedRequiredParticipantIds.has(p.id);
+            return (
+              <div
+                key={p.id}
+                className={`flex items-center gap-2 rounded-2xl px-3 py-2 border shadow-sm cursor-pointer transition
+                  ${selected ? "bg-blue-50 border-blue-200" : "bg-white"}
+                `}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleRequiredParticipant(p.id);
+                }}
+              >
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
             <span className="text-sm font-medium">{p.name}</span>
+
+                {/* 스크롤 튐 방지: input은 클릭 비활성화, 상태는 부모 div에서 토글 */}
             <label className="text-xs ml-2 flex items-center gap-1">
               <input
                 type="checkbox"
-                checked={selectedRequiredParticipantIds.has(p.id)}
-                onChange={() => toggleRequiredParticipant(p.id)}
+                    checked={selected}
+                    readOnly
+                    style={{ pointerEvents: "none" }}
               />
               필수로 포함
             </label>
           </div>
-        ))}
+            );
+          })}
+        </div>
       </div>
     );
   }
@@ -1033,7 +957,11 @@ export default function MeetingSchedulerMVP() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <select className="border rounded-xl px-3 py-2" value={activeParticipantId} onChange={(e) => setActiveParticipantId(e.target.value)}>
+          <select
+            className="border rounded-xl px-3 py-2"
+            value={activeParticipantId}
+            onChange={(e) => setActiveParticipantId(e.target.value)}
+          >
             {participants.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -1060,20 +988,206 @@ export default function MeetingSchedulerMVP() {
     );
   }
 
-  function OrganizerPanel() {
+  function UserDemoPanel() {
+    if (!agentData) {
+      return (
+        <div className="space-y-6">
+          <div className="text-center py-8">
+            <div className="text-6xl mb-4">📅</div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">일정 초대</h2>
+            <p className="text-slate-600 mb-6">
+              AI Agent를 통해 새로운 일정을 초대해보세요
+            </p>
+            <button 
+              onClick={() => {
+                // Agent 탭으로 이동하는 로직은 상위 컴포넌트에서 처리
+                window.location.reload(); // 임시로 페이지 새로고침
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              일정 초대하기
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Agent 데이터가 있을 때 기존 캘린더와 동일한 디자인 사용
+    // 필요한 변수들을 계산 (OrganizerPanel과 동일한 로직 사용)
+    const visibleEvents = participants.flatMap(p => 
+      p.events
+        .filter(e => !ignoredEventIds.has(e.id))
+        .filter(e => !considerOnlyMandatory || e.mandatory)
+        .map(e => ({
+          ...e,
+          participantId: p.id,
+          participantName: p.name,
+          color: p.color
+        }))
+    );
+
+    // 공통 빈 시간 계산 (OrganizerPanel과 동일한 로직)
+    const freeSlotsByDay = useMemo(() => {
+      const selectedP = participants.filter((p) => selectedRequiredParticipantIds.has(p.id));
+      const slots = {};
+      
+      // 태그 생성 함수
+      const generateTags = (startTime, endTime, dayIndex, busyTimes) => {
+        const tags = [];
+        
+        // 1. 퇴근시간 임박 태그 (#퇴근시간 임박)
+        if (endTime >= 18) {
+          tags.push({ text: "#퇴근시간 임박", color: "bg-red-100 text-red-700" });
+        }
+        
+        // 2. 점심시간 포함 태그 (#점심시간 포함)
+        const lunchStart = 12;
+        const lunchEnd = 13;
+        const slotDuration = endTime - startTime;
+        const lunchOverlapStart = Math.max(startTime, lunchStart);
+        const lunchOverlapEnd = Math.min(endTime, lunchEnd);
+        const lunchOverlapDuration = Math.max(0, lunchOverlapEnd - lunchOverlapStart);
+        
+        if (lunchOverlapDuration > 0 && lunchOverlapDuration >= slotDuration * 0.5) {
+          tags.push({ text: "#점심시간 포함", color: "bg-yellow-100 text-yellow-700" });
+        }
+        
+        // 3. 이전미팅 있음 태그 (#이전미팅 있음)
+        const hasPreviousMeeting = busyTimes.some(([busyStart, busyEnd]) => 
+          busyEnd <= startTime && busyEnd > startTime - 1 // 1시간 이내에 끝나는 미팅
+        );
+        if (hasPreviousMeeting) {
+          tags.push({ text: "#이전미팅 있음", color: "bg-blue-100 text-blue-700" });
+        }
+        
+        // 4. 이후미팅 있음 태그 (#이후미팅 있음)
+        const hasNextMeeting = busyTimes.some(([busyStart, busyEnd]) => 
+          busyStart >= endTime && busyStart < endTime + 1 // 1시간 이내에 시작하는 미팅
+        );
+        if (hasNextMeeting) {
+          tags.push({ text: "#이후미팅 있음", color: "bg-purple-100 text-purple-700" });
+        }
+        
+        return tags;
+      };
+      
+      for (let d = 0; d < 5; d++) {
+        const busy = [];
+        for (const p of selectedP) {
+          for (const e of p.events) {
+            if (ignoredEventIds.has(e.id)) continue;
+            if (considerOnlyMandatory && !e.mandatory) continue;
+            if (e.day !== d) continue;
+            busy.push([Math.max(START_HOUR, e.start), Math.min(END_HOUR, e.end)]);
+          }
+        }
+        busy.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        for (const [s, e] of busy) {
+          if (!merged.length || s > merged[merged.length - 1][1]) merged.push([s, e]);
+          else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], e);
+        }
+        const dayFree = [];
+        let cur = START_HOUR;
+        for (const [s, e] of merged) {
+          if (s > cur) {
+            const tags = generateTags(cur, s, d, merged);
+            dayFree.push([cur, s, tags]);
+          }
+          cur = Math.max(cur, e);
+        }
+        if (cur < END_HOUR) {
+          const tags = generateTags(cur, END_HOUR, d, merged);
+          dayFree.push([cur, END_HOUR, tags]);
+        }
+        slots[d] = dayFree;
+      }
+      return slots;
+    }, [participants, selectedRequiredParticipantIds, considerOnlyMandatory, ignoredEventIds]);
+
+    // toggleIgnore 함수 정의
+    const toggleIgnore = (eventId) => {
+      setIgnoredEventIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(eventId)) {
+          newSet.delete(eventId);
+        } else {
+          newSet.add(eventId);
+        }
+        return newSet;
+      });
+    };
+
     return (
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <ParticipantLegend />
-          <label className="text-sm flex items-center gap-2 md:ml-auto">
-            <input type="checkbox" checked={considerOnlyMandatory} onChange={() => setConsiderOnlyMandatory((v) => !v)} />
-            필수 일정만 고려
-          </label>
+        {/* 공통 빈 시간 리스트 (색상 시각화는 제거) */}
+        <div className="rounded-2xl border bg-white shadow-sm">
+          <div className="px-4 py-3 border-b text-sm font-semibold">공통 빈 시간 (선택된 필수 참여자 기준)</div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+            {Object.entries(freeSlotsByDay)
+              .sort(([a], [b]) => Number(a) - Number(b)) // 날짜 순 정렬
+              .map(([d, slots]) => {
+                const sortedSlots = slots.sort((a, b) => {
+                  const [aStart, aEnd, aTags] = a;
+                  const [bStart, bEnd, bTags] = b;
+                  
+                  // 1. 가능시간이 긴 순 (내림차순)
+                  const aDuration = aEnd - aStart;
+                  const bDuration = bEnd - bStart;
+                  if (Math.abs(aDuration - bDuration) > 0.1) {
+                    return bDuration - aDuration;
+                  }
+                  
+                  // 2. 태그가 적은 순 (오름차순)
+                  return aTags.length - bTags.length;
+                });
+                
+                return (
+                  <div key={d} className="border rounded-xl p-3 bg-slate-50">
+                    <div className="text-sm font-semibold mb-2">{DAYS[Number(d)]}</div>
+                    <ul className="space-y-2 text-xs text-slate-700">
+                      {sortedSlots.map(([start, end, tags], idx) => (
+                        <li key={idx} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span>{fmtTime(start)}–{fmtTime(end)}</span>
+                            <button 
+                              className="text-[11px] px-2 py-1 rounded-lg border bg-white hover:bg-slate-100"
+                              onClick={() => createMeetingPopup(start, end, Number(d))}
+                            >
+                              선택
+                            </button>
+                          </div>
+                          {tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {tags.map((tag, tagIdx) => (
+                                <span key={tagIdx} className={`text-[10px] px-1.5 py-0.5 rounded ${tag.color}`}>
+                                  {tag.text}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+          </div>
         </div>
 
         {/* 전체 일정 리스트 + 무시 토글 */}
         <div className="rounded-2xl border bg-white shadow-sm">
-          <div className="px-4 py-3 border-b text-sm font-semibold">전체 일정 (필터 반영)</div>
+          <div className="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
+            <span>전체 일정 (필터 반영)</span>
+            <button
+              onClick={() => setIsEventListExpanded(!isEventListExpanded)}
+              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            >
+              {isEventListExpanded ? '접기' : '펼치기'}
+              <span className="text-xs">{isEventListExpanded ? '▲' : '▼'}</span>
+            </button>
+          </div>
+          {isEventListExpanded && (
           <div className="divide-y">
             {visibleEvents.length === 0 && <div className="p-4 text-sm text-slate-500">표시할 일정이 없습니다.</div>}
             {visibleEvents.map((e) => (
@@ -1083,34 +1197,184 @@ export default function MeetingSchedulerMVP() {
                   <div className="text-sm font-medium">{e.title} — {e.participantName}</div>
                   <div className="text-xs text-slate-500">{DAYS[e.day]} {fmtTime(e.start)}–{fmtTime(e.end)}</div>
                 </div>
-                <button onClick={() => toggleIgnore(e.id)} className={"px-3 py-1 rounded-lg text-xs border " + (ignoredEventIds.has(e.id) ? "bg-slate-100 text-slate-500" : "bg-white hover:bg-slate-50")}>{ignoredEventIds.has(e.id) ? "무시 해제" : "일정 무시"}</button>
+                  <button 
+                    onClick={(event) => {
+                      event.preventDefault();
+                      toggleIgnore(e.id);
+                    }} 
+                    className={"px-3 py-1 rounded-lg text-xs border " + (ignoredEventIds.has(e.id) ? "bg-slate-100 text-slate-500" : "bg-white hover:bg-slate-50")}
+                  >
+                    {ignoredEventIds.has(e.id) ? "무시 해제" : "일정 무시"}
+                  </button>
               </div>
             ))}
           </div>
+          )}
         </div>
 
+        {/* 참여자 선택 영역 */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <ParticipantLegend />
+        </div>
+      </div>
+    );
+  }
+
+  function OrganizerPanel() {
+    return (
+      <div className="space-y-6">
         {/* 공통 빈 시간 리스트 (색상 시각화는 제거) */}
         <div className="rounded-2xl border bg-white shadow-sm">
           <div className="px-4 py-3 border-b text-sm font-semibold">공통 빈 시간 (선택된 필수 참여자 기준)</div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
-            {Object.entries(freeSlotsByDay).map(([d, slots]) => (
+            {Object.entries(freeSlotsByDay)
+              .sort(([a], [b]) => Number(a) - Number(b)) // 날짜 순 정렬
+              .map(([d, slots]) => {
+                const sortedSlots = slots.sort((a, b) => {
+                  const [aStart, aEnd, aTags] = a;
+                  const [bStart, bEnd, bTags] = b;
+                  
+                  // 1. 가능시간이 긴 순 (내림차순)
+                  const aDuration = aEnd - aStart;
+                  const bDuration = bEnd - bStart;
+                  if (aDuration !== bDuration) {
+                    return bDuration - aDuration;
+                  }
+                  
+                  // 2. 태그가 적은 순 (오름차순)
+                  const aTagCount = aTags ? aTags.length : 0;
+                  const bTagCount = bTags ? bTags.length : 0;
+                  if (aTagCount !== bTagCount) {
+                    return aTagCount - bTagCount;
+                  }
+                  
+                  // 3. 시작시간 순 (오름차순)
+                  return aStart - bStart;
+                });
+                
+                return (
               <div key={d} className="border rounded-xl p-3 bg-slate-50">
                 <div className="text-sm font-semibold mb-2">{DAYS[Number(d)]}</div>
-                {slots.length === 0 ? (
+                    {sortedSlots.length === 0 ? (
                   <div className="text-xs text-slate-500">없음</div>
                 ) : (
-                  <ul className="space-y-1 text-xs text-slate-700">
-                    {slots.map(([s, e], idx) => (
-                      <li key={idx} className="flex items-center justify-between">
+                      <ul className="space-y-2 text-xs text-slate-700">
+                        {sortedSlots.map((slot, idx) => {
+                          const [s, e, tags] = slot;
+                          return (
+                            <li key={idx} className="space-y-1">
+                              <div className="flex items-center justify-between">
                         <span>{fmtTime(s)}–{fmtTime(e)}</span>
-                        <button className="text-[11px] px-2 py-1 rounded-lg border bg-white hover:bg-slate-100">선택</button>
-                      </li>
-                    ))}
+                                <button 
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    createMeetingPopup(s, e, Number(d));
+                                  }}
+                                  className="text-[11px] px-2 py-1 rounded-lg border bg-white hover:bg-slate-100"
+                                >
+                                  선택
+                                </button>
+                              </div>
+                              {tags && tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {tags.map((tag, tagIdx) => (
+                                    <span
+                                      key={tagIdx}
+                                      className={`text-[10px] px-2 py-1 rounded-full ${tag.color}`}
+                                    >
+                                      {tag.text}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </li>
+                          );
+                        })}
                   </ul>
                 )}
               </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* 전체 일정 리스트 + 무시 토글 */}
+        <div className="rounded-2xl border bg-white shadow-sm">
+          <div className="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
+            <span>전체 일정 (필터 반영)</span>
+            <button
+              onClick={() => setIsEventListExpanded(!isEventListExpanded)}
+              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            >
+              {isEventListExpanded ? '접기' : '펼치기'}
+              <span className="text-xs">{isEventListExpanded ? '▲' : '▼'}</span>
+            </button>
+          </div>
+          {isEventListExpanded && (
+          <div className="divide-y">
+            {visibleEvents.length === 0 && <div className="p-4 text-sm text-slate-500">표시할 일정이 없습니다.</div>}
+            {visibleEvents.map((e) => (
+              <div key={e.id + e.participantId} className="p-4 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{e.title} — {e.participantName}</div>
+                  <div className="text-xs text-slate-500">{DAYS[e.day]} {fmtTime(e.start)}–{fmtTime(e.end)}</div>
+                </div>
+                  <button 
+                    onClick={(event) => {
+                      event.preventDefault();
+                      toggleIgnore(e.id);
+                    }} 
+                    className={"px-3 py-1 rounded-lg text-xs border " + (ignoredEventIds.has(e.id) ? "bg-slate-100 text-slate-500" : "bg-white hover:bg-slate-50")}
+                  >
+                    {ignoredEventIds.has(e.id) ? "무시 해제" : "일정 무시"}
+                  </button>
+              </div>
             ))}
           </div>
+          )}
+        </div>
+
+        {/* 참여자 선택 영역 */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <ParticipantLegend />
+        </div>
+
+        {/* 전체 일정 리스트 + 무시 토글 */}
+        <div className="rounded-2xl border bg-white shadow-sm">
+          <div className="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
+            <span>전체 일정 (필터 반영)</span>
+            <button
+              onClick={() => setIsEventListExpanded(!isEventListExpanded)}
+              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            >
+              {isEventListExpanded ? '접기' : '펼치기'}
+              <span className="text-xs">{isEventListExpanded ? '▲' : '▼'}</span>
+            </button>
+          </div>
+          {isEventListExpanded && (
+          <div className="divide-y">
+            {visibleEvents.length === 0 && <div className="p-4 text-sm text-slate-500">표시할 일정이 없습니다.</div>}
+            {visibleEvents.map((e) => (
+              <div key={e.id + e.participantId} className="p-4 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{e.title} — {e.participantName}</div>
+                  <div className="text-xs text-slate-500">{DAYS[e.day]} {fmtTime(e.start)}–{fmtTime(e.end)}</div>
+                </div>
+                  <button 
+                    onClick={(event) => {
+                      event.preventDefault();
+                      toggleIgnore(e.id);
+                    }} 
+                    className={"px-3 py-1 rounded-lg text-xs border " + (ignoredEventIds.has(e.id) ? "bg-slate-100 text-slate-500" : "bg-white hover:bg-slate-50")}
+                  >
+                    {ignoredEventIds.has(e.id) ? "무시 해제" : "일정 무시"}
+                  </button>
+              </div>
+            ))}
+          </div>
+          )}
         </div>
       </div>
     );
@@ -1160,6 +1424,10 @@ export default function MeetingSchedulerMVP() {
           } : {})
         }}
         onMouseDown={(ev) => {
+          // 스크롤 방지 처리 (모든 경우에 적용)
+          ev.preventDefault();
+          ev.stopPropagation();
+          
           // 일정 요소가 아닌 경우에만 처리
           if (ev.target.closest('[data-event]')) {
             return; // 일정 요소는 무시
@@ -1167,9 +1435,6 @@ export default function MeetingSchedulerMVP() {
           
           if (mode === "participant" && isAddingEvent) {
             // 일정 추가 모드에서만 드래그 처리
-            ev.preventDefault();
-            ev.stopPropagation();
-            
             // 스크롤 방지를 위한 추가 처리
             ev.currentTarget.style.userSelect = 'none';
             ev.currentTarget.style.webkitUserSelect = 'none';
@@ -1203,6 +1468,7 @@ export default function MeetingSchedulerMVP() {
             
             if (!touchStartPoint) {
               // 첫 번째 터치: 시작점 설정
+              console.log('모바일 첫 번째 터치:', { dayIndex, touchTime });
               setTouchStartPoint({ day: dayIndex, time: touchTime });
               setDragSelection({ day: dayIndex, start: touchTime, end: touchTime });
             } else {
@@ -1213,7 +1479,10 @@ export default function MeetingSchedulerMVP() {
                 setDragSelection({ day: dayIndex, start: touchTime, end: touchTime });
               } else {
                 // 정상적인 종료점 설정
-                setDragSelection({ day: dayIndex, start: touchStartPoint.time, end: touchTime });
+                const startTime = touchStartPoint.time;
+                const endTime = touchTime;
+                console.log('모바일 터치 완료:', { startTime, endTime, dayIndex });
+                setDragSelection({ day: dayIndex, start: startTime, end: endTime });
                 setTouchStartPoint(null);
                 setIsAddingEvent(false);
                 setShowMobileInput(true);
@@ -1509,15 +1778,16 @@ export default function MeetingSchedulerMVP() {
         className="rounded-3xl border bg-white shadow-sm overflow-hidden"
         style={{ 
           userSelect: isAddingEvent ? 'none' : 'auto',
+          // 스크롤 방지 처리
+          overscrollBehavior: 'none',
+          WebkitOverscrollBehavior: 'none',
+          scrollBehavior: 'auto',
           // 드래그 시 스크롤 방지
           ...(isAddingEvent && !hasTouchSupport ? {
             overflow: 'hidden',
             position: 'relative',
-            overscrollBehavior: 'none',
-            WebkitOverscrollBehavior: 'none',
             // PC에서 스크롤 완전 차단
-            pointerEvents: 'auto',
-            scrollBehavior: 'auto'
+            pointerEvents: 'auto'
           } : {})
         }}
         onMouseMove={(ev) => {
@@ -1585,12 +1855,16 @@ export default function MeetingSchedulerMVP() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">모임 초대·조율 — 주간 캘린더 MVP</h1>
           <p className="text-sm text-slate-600 mt-1">
-            초대 구간: <b>10월 24일 ~ 10월 31일</b> · 목적: <b>팀미팅</b> · 구성: {demoMode === "large" ? "10명 참여자" : "황원준, 정유진, 한지은"}
-            {demoMode === "large" && (
+            초대 구간: <b>10월 24일 ~ 10월 31일</b> · 목적: <b>{demoMode === "user" && agentData ? agentData.title : "팀미팅"}</b>
+            <br />
+            구성: <span className="font-medium">{
+              demoMode === "large" ? "10명 참여자" : 
+              demoMode === "user" && agentData ? agentData.participants.join(", ") + "," :
+              "황원준, 정유진, 한지은,"
+            }</span>
               <span className="ml-2 text-blue-600 font-medium">
                 · {currentWeek === 0 ? '1주차 (10월 24일~30일)' : '2주차 (10월 31일~11월 6일)'}
               </span>
-            )}
           </p>
         </div>
         
@@ -1617,11 +1891,20 @@ export default function MeetingSchedulerMVP() {
             >
               10명 데모
             </button>
+            <button
+              onClick={() => setDemoMode("user")}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                demoMode === "user" 
+                  ? 'bg-white text-slate-900 shadow-sm' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              사용자 데모
+            </button>
           </div>
         </div>
 
-        {/* 주간 네비게이션 (10명 데모 또는 사용자 일정 데모에서 표시) */}
-        {(demoMode === "large" || activeTab === "invite") && (
+        {/* 주간 네비게이션 (모든 데모에서 표시) */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentWeek(Math.max(0, currentWeek - 1))}
@@ -1649,39 +1932,19 @@ export default function MeetingSchedulerMVP() {
               다음주 →
             </button>
           </div>
-        )}
         
         <div className="flex items-center gap-2 md:ml-auto">
-          {/* 탭 네비게이션 */}
-          <div className="flex bg-slate-100 rounded-xl p-1 mr-4">
-            <button
-              onClick={() => setActiveTab("calendar")}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === "calendar" 
-                  ? 'bg-white text-slate-900 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              캘린더
-            </button>
-            <button
-              onClick={() => setActiveTab("invite")}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === "invite" 
-                  ? 'bg-white text-slate-900 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              사용자 일정 데모
-            </button>
-          </div>
-
-          {(activeTab === "calendar" || activeTab === "invite") && (
-            <>
-              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "organizer" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("organizer")}>
+              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "organizer" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => {
+                setMode("organizer");
+                setShowOrganizerTutorial(true);
+              }}>
                 모임장
               </button>
-              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "participant" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => setMode("participant")}>
+              <button className={"px-4 py-2 rounded-xl border shadow-sm " + (mode === "participant" ? "bg-slate-900 text-white" : "bg-white hover:bg-slate-50")} onClick={() => {
+                setMode("participant");
+                setShowParticipantPopup(true);
+                setShowParticipantTutorial(true);
+              }}>
                 참여자
               </button>
               {mode === "participant" && (
@@ -1715,24 +1978,11 @@ export default function MeetingSchedulerMVP() {
                   </button>
                 </div>
               )}
-            </>
-          )}
-          
-          {/* 초대 메시지 작성 버튼 */}
-          <button
-            onClick={openInviteWindow}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-          >
-            초대 메시지 작성
-          </button>
         </div>
       </div>
 
-      {/* 탭별 콘텐츠 */}
-      {activeTab === "calendar" ? (
-        <>
           {/* 주간 캘린더 */}
-          <WeekGrid />
+      {(demoMode !== "user" || (demoMode === "user" && agentData)) && <WeekGrid />}
           
           {/* 추가 모드 안내 */}
           {mode === "participant" && isAddingEvent && (
@@ -1767,9 +2017,9 @@ export default function MeetingSchedulerMVP() {
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">시작 시간</label>
                       <select
-                        value={hours.find(h => fmtTime(h) === fmtTime(Math.min(dragSelection.start, dragSelection.end))) || Math.min(dragSelection.start, dragSelection.end)}
+                        value={formatTimeForInput(Math.min(dragSelection.start, dragSelection.end))}
                         onChange={(e) => {
-                          const newStart = parseFloat(e.target.value);
+                          const newStart = parseTimeFromInput(e.target.value);
                           const currentEnd = Math.max(dragSelection.start, dragSelection.end);
                           setDragSelection(prev => ({
                             ...prev,
@@ -1779,17 +2029,19 @@ export default function MeetingSchedulerMVP() {
                         }}
                         className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {hours.map(h => (
-                          <option key={h} value={h}>{fmtTime(h)}</option>
+                        {generateTimeOptions(Math.min(dragSelection.start, dragSelection.end), Math.max(dragSelection.start, dragSelection.end), 30).map(time => (
+                          <option key={time.value} value={time.value}>
+                            {time.label}
+                          </option>
                         ))}
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">종료 시간</label>
                       <select
-                        value={hours.find(h => fmtTime(h) === fmtTime(Math.max(dragSelection.start, dragSelection.end))) || Math.max(dragSelection.start, dragSelection.end)}
+                        value={formatTimeForInput(Math.max(dragSelection.start, dragSelection.end))}
                         onChange={(e) => {
-                          const newEnd = parseFloat(e.target.value);
+                          const newEnd = parseTimeFromInput(e.target.value);
                           const currentStart = Math.min(dragSelection.start, dragSelection.end);
                           setDragSelection(prev => ({
                             ...prev,
@@ -1799,8 +2051,10 @@ export default function MeetingSchedulerMVP() {
                         }}
                         className="w-full py-2 px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        {hours.map(h => (
-                          <option key={h} value={h}>{fmtTime(h)}</option>
+                        {generateTimeOptions(Math.min(dragSelection.start, dragSelection.end) + 0.5, Math.max(dragSelection.start, dragSelection.end), 30).map(time => (
+                          <option key={time.value} value={time.value}>
+                            {time.label}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -1876,313 +2130,321 @@ export default function MeetingSchedulerMVP() {
             </div>
           )}
 
-          {/* 패널 */}
-          {mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />}
-        </>
-      ) : (
-        /* 사용자 일정 데모 탭 */
-        <div className="space-y-6">
-          {inviteData ? (
-            <>
-              {/* 초대 데이터를 기반으로 한 주간 캘린더 */}
-              <div className="rounded-3xl border bg-white shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b text-sm font-semibold bg-blue-50">
-                  📅 초대 메시지 결과 - {inviteData.meetingName}
+      {/* 미팅 정보 팝업 */}
+      {meetingPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">미팅 정보</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">모임명</label>
+                <input
+                  type="text"
+                  defaultValue="팀미팅"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
                 </div>
-                <div className="grid grid-cols-8 bg-slate-50 border-b">
-                  <div className="p-3 text-xs text-slate-500">시간</div>
-                  {DAYS.map((d) => (
-                    <div key={d} className="p-3 text-center text-xs font-semibold text-slate-700 border-l">{d}</div>
-                  ))}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">참석자</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg">
+                  {participants.filter(p => selectedRequiredParticipantIds.has(p.id)).map(p => p.name).join(', ')}
                 </div>
-                <div className="grid grid-cols-8">
-                  {/* 시간 라벨 열 */}
-                  <div className="border-r">
-                    {hours.map((h) => (
-                      <div key={h} className="h-16 border-b border-slate-100 text-xs text-slate-400 pl-1">
-                        {h}시
                       </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">시간</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">{DAYS[meetingPopup.dayIndex]}</span>
+                  <select
+                    value={formatTimeForInput(meetingPopup.startTime)}
+                    onChange={(e) => {
+                      const newTime = parseTimeFromInput(e.target.value);
+                      if (newTime < meetingPopup.endTime) {
+                        setMeetingPopup(prev => ({ ...prev, startTime: newTime }));
+                      } else {
+                        // 시작시간이 종료시간보다 크거나 같으면 종료시간을 시작시간 + 0.5시간으로 설정
+                        setMeetingPopup(prev => ({ 
+                          ...prev, 
+                          startTime: newTime,
+                          endTime: Math.min(newTime + 0.5, prev.maxEnd)
+                        }));
+                      }
+                    }}
+                    className="px-2 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    {generateTimeOptions(meetingPopup.minStart, meetingPopup.endTime - 0.5, 30).map(time => (
+                      <option key={time.value} value={time.value}>
+                        {time.label}
+                      </option>
                     ))}
-                  </div>
-                  {/* 요일별 컬럼 */}
-                  {DAYS.map((_, dayIdx) => {
-                    // 초대 데이터의 일정들을 기반으로 이벤트 찾기
-                    const inviteEvents = [];
-                    inviteData.schedule.forEach(participant => {
-                      participant.events.forEach(event => {
-                        if (event.day === dayIdx) {
-                          inviteEvents.push({
-                            ...event,
-                            participantId: participant.id,
-                            participantName: participant.name,
-                            color: participant.color
-                          });
-                        }
-                      });
-                    });
-
-                    return (
-                      <div key={dayIdx} className="relative border-l border-slate-200">
-                        {hours.map((h) => (
-                          <div key={h} className="h-16 border-b border-slate-100 text-xs text-slate-400 pl-1">
-                            {h}시
-                          </div>
-                        ))}
-                        <div 
-                          className="absolute inset-0"
-                          onClick={() => { 
-                            setSelectedInviteEvent(null); 
-                            setInviteOverlapPicker(null); 
-                          }}
-                        >
-                          {inviteEvents.map((e) => {
-                            const top = ((e.start - START_HOUR) / (END_HOUR - START_HOUR)) * 100;
-                            const height = Math.max(2, ((e.end - START_HOUR) / (END_HOUR - START_HOUR)) * 100 - top);
-                            const overlappingEvents = inviteEvents.filter(other => 
-                              other.id !== e.id && 
-                              other.start < e.end && 
-                              other.end > e.start
-                            );
-                            
-                            return (
-                              <div
-                                key={e.id + e.participantId}
-                                data-event="true"
-                                className="absolute left-1 right-1 rounded-xl p-2 text-xs font-medium overflow-hidden cursor-pointer"
-                                style={{
-                                  top: `${top}%`,
-                                  height: `${height}%`,
-                                  backgroundColor: e.color,
-                                  opacity: e.mandatory ? 0.9 : 0.55,
-                                  mixBlendMode: "multiply",
-                                }}
-                                title={`${e.title} — ${e.participantName}`}
-                                onMouseDown={(ev) => {
-                                  ev.preventDefault();
-                                  ev.stopPropagation();
-                                  
-                                  if (overlappingEvents.length > 0) {
-                                    // 중복 일정이 있는 경우 사용자 선택 오버레이 표시
-                                    setInviteOverlapPicker({
-                                      day: dayIdx,
-                                      topPct: top,
-                                      items: [e, ...overlappingEvents].map(event => ({
-                                        participantId: event.participantId,
-                                        eventId: event.id,
-                                        title: event.title,
-                                        participantName: event.participantName,
-                                        mandatory: event.mandatory
-                                      }))
-                                    });
-                                  } else {
-                                    // 중복이 없는 경우 바로 선택
-                                    setSelectedInviteEvent({ 
-                                      participantId: e.participantId, 
-                                      eventId: e.id, 
-                                      day: dayIdx, 
-                                      start: e.start,
-                                      title: e.title,
-                                      participantName: e.participantName,
-                                      mandatory: e.mandatory
-                                    });
-                                  }
-                                }}
-                                onClick={(ev) => {
-                                  ev.stopPropagation();
-                                }}
-                              >
-                                <div className="truncate text-white drop-shadow-sm">
-                                  {e.title} <span className="opacity-90">· {e.participantName}</span>
+                  </select>
+                  <span className="text-gray-500">-</span>
+                  <select
+                    value={formatTimeForInput(meetingPopup.endTime)}
+                    onChange={(e) => {
+                      const newTime = parseTimeFromInput(e.target.value);
+                      if (newTime > meetingPopup.startTime) {
+                        setMeetingPopup(prev => ({ ...prev, endTime: newTime }));
+                      }
+                    }}
+                    className="px-2 py-1 border border-gray-300 rounded text-sm"
+                  >
+                    {generateTimeOptions(meetingPopup.startTime + 0.5, meetingPopup.maxEnd, 30).map(time => (
+                      <option key={time.value} value={time.value}>
+                        {time.label}
+                      </option>
+                    ))}
+                  </select>
                                 </div>
-                                <div className="text-[10px] text-white/90 mt-1">
-                                  {fmtTime(e.start)}–{fmtTime(e.end)}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
 
-
-              {/* 중복 일정 선택 오버레이 */}
-              {inviteOverlapPicker && (
-                <div 
-                  className={`absolute z-50 translate-y-[-6px] ${
-                    inviteOverlapPicker.day === 0 ? 'left-2' : 
-                    inviteOverlapPicker.day === 4 ? 'right-2' : 
-                    'left-1/2 transform -translate-x-1/2'
-                  }`} 
-                  style={{ top: `${inviteOverlapPicker.topPct}%` }} 
-                  onClick={(ev) => ev.stopPropagation()}
-                >
-                  <div className="bg-white border shadow-xl rounded-2xl p-2 w-56 max-w-[calc(100vw-2rem)]">
-                    <div className="px-2 py-1 text-xs text-slate-500">
-                      어떤 일정을 변경할까요?
-                    </div>
-                    <div className="max-h-48 overflow-auto mt-1 flex flex-col gap-1">
-                      {inviteOverlapPicker.items.map((item, index) => (
+            <div className="flex gap-3 mt-6">
                         <button
-                          key={item.eventId}
-                          onClick={(ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
-                            setSelectedInviteEvent({
-                              participantId: item.participantId,
-                              eventId: item.eventId,
-                              day: inviteOverlapPicker.day,
-                              start: 0, // 실제 시간은 이벤트에서 가져와야 함
-                              title: item.title,
-                              participantName: item.participantName,
-                              mandatory: item.mandatory
-                            });
-                            setInviteOverlapPicker(null);
-                          }}
-                          className="text-left text-sm px-3 py-2 rounded-xl border hover:bg-slate-50"
-                        >
-                          {item.title} · <span className="text-slate-500">{item.participantName}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex justify-end pt-2">
-                      <button
-                        onClick={() => setInviteOverlapPicker(null)}
-                        className="text-xs px-2 py-1 rounded-lg border hover:bg-slate-50"
+                onClick={() => setMeetingPopup(null)}
+                className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
                       >
                         취소
+                        </button>
+                      <button
+                onClick={sendMeeting}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      >
+                전송
                       </button>
                     </div>
                   </div>
                 </div>
               )}
-
-              {/* 선택된 이벤트 팝업 */}
-              {selectedInviteEvent && (
-                <div 
-                  className={`absolute z-50 translate-y-[-6px] ${
-                    selectedInviteEvent.day === 0 ? 'left-2' : 
-                    selectedInviteEvent.day === 4 ? 'right-2' : 
-                    'left-1/2 transform -translate-x-1/2'
-                  }`}
-                  style={{ top: `${((selectedInviteEvent.start - START_HOUR) / (END_HOUR - START_HOUR)) * 100}%` }} 
-                  onMouseDown={(ev) => ev.stopPropagation()}
-                  onMouseUp={(ev) => ev.stopPropagation()}
-                  onClick={(ev) => ev.stopPropagation()}
-                >
-                  <div className="bg-white border shadow-xl rounded-2xl p-2 w-44 max-w-[calc(100vw-2rem)]">
-                    <div className="px-2 py-1 text-xs text-slate-500">
-                      {selectedInviteEvent.title} · {selectedInviteEvent.participantName}
-                    </div>
-                    <div className="flex flex-col gap-2 mt-1">
-                      <button
-                        onMouseDown={(ev) => {
-                          ev.preventDefault();
-                          ev.stopPropagation();
-                        }}
-                        onClick={(ev) => {
-                          ev.preventDefault();
-                          ev.stopPropagation();
-                          // 필수 상태 토글
-                          setInviteData(prev => {
-                            if (!prev) return prev;
-                            return {
-                              ...prev,
-                              schedule: prev.schedule.map(participant => {
-                                if (participant.id === selectedInviteEvent.participantId) {
-                                  return {
-                                    ...participant,
-                                    events: participant.events.map(event => 
-                                      event.id === selectedInviteEvent.eventId 
-                                        ? { ...event, mandatory: !event.mandatory }
-                                        : event
-                                    )
-                                  };
-                                }
-                                return participant;
-                              })
-                            };
-                          });
-                          setSelectedInviteEvent(prev => ({ ...prev, mandatory: !prev.mandatory }));
-                        }}
-                        className="text-sm px-3 py-2 rounded-xl border hover:bg-slate-50 text-slate-700"
-                      >
-                        {selectedInviteEvent.mandatory ? '필수 해제' : '필수로 표시'}
-                      </button>
-                      <button
-                        onMouseDown={(ev) => {
-                          ev.preventDefault();
-                          ev.stopPropagation();
-                        }}
-                        onClick={(ev) => {
-                          ev.preventDefault();
-                          ev.stopPropagation();
-                          // 이벤트 삭제
-                          setInviteData(prev => {
-                            if (!prev) return prev;
-                            return {
-                              ...prev,
-                              schedule: prev.schedule.map(participant => {
-                                if (participant.id === selectedInviteEvent.participantId) {
-                                  return {
-                                    ...participant,
-                                    events: participant.events.filter(event => event.id !== selectedInviteEvent.eventId)
-                                  };
-                                }
-                                return participant;
-                              })
-                            };
-                          });
-                          setSelectedInviteEvent(null);
-                        }}
-                        className="text-sm px-3 py-2 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 닫기 버튼 */}
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    setInviteData(null);
-                    setSelectedInviteEvent(null);
-                  }}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-300 transition-colors"
-                >
-                  닫기
-                </button>
-              </div>
 
               {/* 패널 */}
-              {mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />}
-            </>
-          ) : (
-            <div className="rounded-2xl border bg-white shadow-sm p-8 text-center">
-              <div className="text-6xl mb-4">📅</div>
-              <h2 className="text-2xl font-bold text-slate-700 mb-2">사용자 일정 데모</h2>
-              <p className="text-slate-500 mb-6">초대 메시지에서 생성된 데이터가 여기에 표시됩니다.</p>
-              <button
-                onClick={openInviteWindow}
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-              >
-                초대 메시지 작성하기
-              </button>
-            </div>
-          )}
-        </div>
+      {demoMode === "user" ? (
+        mode === "participant" ? <ParticipantPanel /> : <UserDemoPanel />
+      ) : (
+        mode === "participant" ? <ParticipantPanel /> : <OrganizerPanel />
       )}
-
 
       <div className="text-xs text-slate-500 pt-4">
         · 겹침 표현: 참여자 색상 + <code>opacity</code> + <code>mix-blend-multiply</code> 사용. 클릭 위치 기반 겹침 선택 팝업 제공.<br />
         · 공통 빈 시간: 그리드 상의 녹색 하이라이트는 제거되었고, **리스트**로만 제공합니다.
-      </div>
+                    </div>
+
+      {/* 참여자 탭 클릭 시 팝업 */}
+      {showParticipantPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">일정 추가하기</h3>
+              <p className="text-slate-600 mb-6">추가 버튼으로 일정을 추가해보세요</p>
+              <div className="flex gap-3 justify-center">
+                      <button
+                  onClick={() => setShowParticipantPopup(false)}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+                >
+                  확인
+                      </button>
+                      <button
+                  onClick={() => {
+                    setShowParticipantPopup(false);
+                    setIsAddingEvent(true);
+                    // 모바일에서 일정 추가 튜토리얼 표시
+                    if (hasTouchSupport) {
+                      setShowMobileTutorial(true);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  일정 추가하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          )}
+
+      {/* 모바일 일정 추가 튜토리얼 팝업 */}
+      {showMobileTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={() => setShowMobileTutorial(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 튜토리얼 내용 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              
+              <h2 className="text-xl font-bold text-slate-900 mb-3">
+                📱 모바일 일정 추가 방법
+              </h2>
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                시작시간과 종료시간을 클릭해서<br/>
+                일정을 추가해보세요!
+              </p>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">1</div>
+                  <span>원하는 요일의 시작시간을 터치하세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">2</div>
+                  <span>같은 요일의 종료시간을 터치하세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">3</div>
+                  <span>일정 정보를 입력하고 저장하세요</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowMobileTutorial(false)}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              >
+                시작하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 모임장 탭 튜토리얼 팝업 */}
+      {showOrganizerTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={() => {
+                setShowOrganizerTutorial(false);
+                onCloseOrganizerTutorial?.();
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 튜토리얼 내용 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              
+              <h2 className="text-xl font-bold text-slate-900 mb-3">
+                👑 모임장 탭
+              </h2>
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                모임장 탭에서 공통으로 빈 시간을 확인해서<br/>
+                초대 메세지를 보내보세요!
+              </p>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold">1</div>
+                  <span>참여자들의 일정을 확인하세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold">2</div>
+                  <span>공통 빈 시간을 찾아보세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold">3</div>
+                  <span>적절한 시간을 선택하여 초대하세요</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowOrganizerTutorial(false);
+                  onCloseOrganizerTutorial?.();
+                }}
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-green-700 transition-colors"
+              >
+                시작하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 참여자 탭 튜토리얼 팝업 */}
+      {showParticipantTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            {/* 닫기 버튼 */}
+            <button
+              onClick={() => setShowParticipantTutorial(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 튜토리얼 내용 */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              
+              <h2 className="text-xl font-bold text-slate-900 mb-3">
+                👤 참여자 탭
+              </h2>
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                참여자 입장에서 자신의 일정을 추가하고<br/>
+                모임장에게 일정 정보를 전달해보세요!
+              </p>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">1</div>
+                  <span>자신의 일정을 추가하세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">2</div>
+                  <span>필수 일정을 표시하세요</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">3</div>
+                  <span>모임장에게 일정 정보를 전달하세요</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowParticipantTutorial(false)}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              >
+                시작하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
