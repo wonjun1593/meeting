@@ -7,6 +7,30 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, MousePointerClick, PlusCircle, Trash2 } from "lucide-react";
 
+// 반짝이는 효과를 위한 커스텀 스타일
+const shimmerStyle = `
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    animation: glow 1.5s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+    to { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6); }
+  }
+`;
+
 // Types
 interface Message {
   id: string;
@@ -120,11 +144,35 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
   const [participants, setParticipants] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [isComposing, setIsComposing] = useState(false); // 한글 조합 중인지 추적
+  const [isMobile, setIsMobile] = useState(false); // 모바일 감지
+
+  // 커스텀 스타일을 head에 추가
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = shimmerStyle;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const canSend = useMemo(() => participants.length > 0 && title.trim().length > 0, [participants, title]);
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // lg 브레이크포인트 미만을 모바일로 간주
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 새로운 메시지가 추가될 때 자동으로 하단으로 스크롤
   useEffect(() => {
@@ -132,6 +180,18 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // 모바일에서 모임이름 입력 시 페이지 최하단으로 자동 스크롤
+  const scrollToBottom = () => {
+    if (isMobile) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  };
 
   function push(role: Message["role"], text: string) {
     setMessages((m) => [...m, { id: crypto.randomUUID(), role, text }]);
@@ -145,6 +205,12 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
     // "전송 버튼 누르기" 예제인 경우 실제 전송 함수 호출
     if (example === "전송 버튼 누르기" && step === "readyToSend") {
       sendSchedule();
+      return;
+    }
+    
+    // "리셋" 예제인 경우 리셋 함수 호출
+    if (example === "리셋" && step === "readyToSend") {
+      clearAll();
       return;
     }
     
@@ -182,6 +248,8 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
       setTitle(nextTitle);
       push("agent", "전송 버튼을 눌러 일정을 조율해주세요.");
       setStep("readyToSend");
+      // 모바일에서 모임이름 입력 후 자동 스크롤
+      scrollToBottom();
     } else if (step === "askInvite") {
       // First intent message like "일정 초대하고 싶어"
       push("agent", "누구를 초대하고 싶으신가요?");
@@ -223,7 +291,7 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
       "디자인팀과 기획팀 초대",
     ],
     askTitle: ["팀미팅", "디자인 리뷰", "월간 리포트 공유"],
-    readyToSend: ["전송 버튼 누르기"],
+    readyToSend: ["전송 버튼 누르기", "리셋"],
   };
 
   const placeholderByStep: Record<Step, string> = {
@@ -300,6 +368,12 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
                   placeholder={placeholderByStep[step]}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onFocus={() => {
+                    // 모바일에서 포커스 시 자동 스크롤
+                    if (isMobile) {
+                      scrollToBottom();
+                    }
+                  }}
                   className="min-h-[60px] resize-none"
                 />
               ) : (
@@ -310,6 +384,12 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
                   onChange={(e) => setInput(e.target.value)}
                   onCompositionStart={() => setIsComposing(true)}
                   onCompositionEnd={() => setIsComposing(false)}
+                  onFocus={() => {
+                    // 모바일에서 모임이름 입력 단계일 때 포커스 시 자동 스크롤
+                    if (isMobile && step === "askTitle") {
+                      scrollToBottom();
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       // 한글 조합 중이면 전송하지 않음
@@ -390,8 +470,21 @@ export default function AgentScheduler({ onComposeSchedule }: AgentSchedulerProp
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={sendSchedule} disabled={!canSend} className="gap-1">
-              <Send className="h-4 w-4" /> 전송
+            <Button 
+              onClick={sendSchedule} 
+              disabled={!canSend} 
+              className={`gap-1 relative overflow-hidden ${
+                step === "readyToSend" && canSend 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl glow' 
+                  : ''
+              }`}
+            >
+              <span className="relative z-10">
+                <Send className="h-4 w-4" /> 전송
+              </span>
+              {step === "readyToSend" && canSend && (
+                <div className="absolute inset-0 shimmer"></div>
+              )}
             </Button>
             <Button variant="secondary" onClick={clearAll}>리셋</Button>
           </div>

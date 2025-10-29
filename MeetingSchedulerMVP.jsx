@@ -861,6 +861,7 @@ export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOn
 
   // ====== 미팅 전송 완료 ======
   const sendMeeting = () => {
+    // 바로 전송 완료
     alert('전송이 완료되었습니다');
     setMeetingPopup(null);
   };
@@ -966,7 +967,12 @@ export default function MeetingSchedulerMVP({ agentData, showOrganizerTutorialOn
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
-          <button onClick={onSendReply} className="px-4 py-2 rounded-xl bg-slate-900 text-white shadow hover:bg-slate-800">회신 전송</button>
+          <button 
+            onClick={onSendReply} 
+            className="px-4 py-2 rounded-xl bg-slate-900 text-white shadow hover:bg-slate-800"
+          >
+            회신 전송
+          </button>
         </div>
 
 
