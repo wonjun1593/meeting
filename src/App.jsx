@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import MeetingSchedulerMVP from '../MeetingSchedulerMVP.jsx'
 import AgentScheduler from './components/AgentScheduler.tsx'
+import ErrorBoundary from './components/ErrorBoundary.tsx'
 
 function App() {
   const [activeTab, setActiveTab] = useState('agent')
@@ -25,9 +26,10 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* 탭 네비게이션 */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-slate-50">
+        {/* 탭 네비게이션 */}
+        <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab('agent')}
@@ -126,7 +128,8 @@ function App() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }
 
